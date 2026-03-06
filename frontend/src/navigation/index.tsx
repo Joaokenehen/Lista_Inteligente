@@ -22,4 +22,4 @@ export function AppRoutes() {
       <Stack.Screen name="History" component={HistoricoScreen} />
     </Stack.Navigator>
   );
-}
+} // teste
