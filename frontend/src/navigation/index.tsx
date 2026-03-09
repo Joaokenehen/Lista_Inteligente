@@ -17,9 +17,9 @@ export function AppRoutes() {
         contentStyle: { backgroundColor: '#F8FAFC' } 
       }}
     >
-      <Stack.Screen name="Home" component={HomeScreen} />
-      <Stack.Screen name="ShoppingList" component={ListaComprasScreen} />
-      <Stack.Screen name="History" component={HistoricoScreen} />
+      <Stack.Screen name="HomeScreen" component={HomeScreen} />
+      <Stack.Screen name="ListaComprasScreen" component={ListaComprasScreen} />
+      <Stack.Screen name="HistoricoScreen" component={HistoricoScreen} />
     </Stack.Navigator>
   );
 } // teste
