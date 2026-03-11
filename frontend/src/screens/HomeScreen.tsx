@@ -1,11 +1,27 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { AppNavigationProp } from '../types/navigation';
 import { ShoppingCart, History, PlusCircle, ArrowRight } from 'lucide-react-native';
+import AsyncStorage from "@react-native-async-storage/async-storage"
 
 export function HomeScreen() {
   const navigation = useNavigation<AppNavigationProp>();
+  const [nomeUsuario, setNomeUsuario] = useState("Usuário");
+
+  useEffect(() => {
+    async function carregarNome() {
+      try {
+        const nomeSalvo = await AsyncStorage.getItem("@Lista-inteligente:nomeUsuario");
+        if (nomeSalvo) {
+          setNomeUsuario(nomeSalvo);
+        }
+        carregarNome();
+      } catch (error) {
+        console.error("Erro ao carregar nome do usuário:", error);
+      }
+    }
+  }, []);
 
   return (
     <View className="flex-1 bg-slate-50">
@@ -13,7 +29,7 @@ export function HomeScreen() {
         {/* Cabeçalho Curvado com Gradiente Simulado */}
         <View className="bg-green-600 pt-16 pb-20 px-8 rounded-b-[50px] shadow-2xl">
           <Text className="text-green-100 text-lg font-medium">Lista Inteligente</Text>
-          <Text className="text-white text-4xl font-bold mt-1">Olá, João! 👋</Text>
+          <Text className="text-white text-4xl font-bold mt-1">Olá, {nomeUsuario}! 👋</Text>
           <Text className="text-green-50 mt-2 opacity-80">Pronto para economizar hoje?</Text>
         </View>
 
