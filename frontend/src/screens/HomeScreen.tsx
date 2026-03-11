@@ -1,23 +1,43 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { AppNavigationProp } from '../types/navigation';
-import { ShoppingCart, History, PlusCircle, ArrowRight } from 'lucide-react-native';
+import { ShoppingCart, History, PlusCircle, ArrowRight, Users } from 'lucide-react-native';
+import AsyncStorage from "@react-native-async-storage/async-storage"
 
 export function HomeScreen() {
   const navigation = useNavigation<AppNavigationProp>();
+  const [nomeUsuario, setNomeUsuario] = useState("Usuário");
+
+  // useFocusEffect é chamado SEMPRE que a tela aparece
+  useFocusEffect(
+    React.useCallback(() => {
+      async function carregarNome() {
+        try {
+          // Buscando a chave padronizada
+          const nomeSalvo = await AsyncStorage.getItem("@Lista-inteligente:perfilAtual");
+          if (nomeSalvo) {
+            setNomeUsuario(nomeSalvo);
+          }
+        } catch (error) {
+          console.error("Erro ao carregar nome do usuário:", error);
+        }
+      }
+      
+      // Chamando a função (isso estava faltando no seu código original)
+      carregarNome();
+    }, [])
+  );
 
   return (
     <View className="flex-1 bg-slate-50">
       <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-        {/* Cabeçalho Curvado com Gradiente Simulado */}
         <View className="bg-green-600 pt-16 pb-20 px-8 rounded-b-[50px] shadow-2xl">
           <Text className="text-green-100 text-lg font-medium">Lista Inteligente</Text>
-          <Text className="text-white text-4xl font-bold mt-1">Olá, João! 👋</Text>
+          <Text className="text-white text-4xl font-bold mt-1">Olá, {nomeUsuario}! 👋</Text>
           <Text className="text-green-50 mt-2 opacity-80">Pronto para economizar hoje?</Text>
         </View>
 
-        {/* Cards de Ação */}
         <View className="px-6 -mt-10">
           <TouchableOpacity 
             onPress={() => navigation.navigate('ListaComprasScreen')}
@@ -45,18 +65,16 @@ export function HomeScreen() {
               <Text className="text-slate-800 font-bold">Histórico</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity className="flex-1 bg-white p-6 rounded-[32px] shadow-lg border border-slate-100 items-center opacity-50">
+            <TouchableOpacity 
+              onPress={() => navigation.navigate('SelecionarPerfilScreen')}
+              className="flex-1 bg-white p-6 rounded-[32px] shadow-lg border border-slate-100 items-center opacity-80"
+            >
               <View className="bg-purple-100 p-3 rounded-xl mb-2">
-                <ShoppingCart size={24} color="#9333ea" />
+                <Users size={24} color="#9333ea" />
               </View>
-              <Text className="text-slate-800 font-bold">Perfil</Text>
+              <Text className="text-slate-800 font-bold">Trocar Perfil</Text>
             </TouchableOpacity>
           </View>
-        </View>
-
-        {/* Footer/Dica */}
-        <View className="mt-auto p-10 items-center">
-          <Text className="text-slate-400 text-sm italic">"Economizar é comprar o que precisa."</Text>
         </View>
       </ScrollView>
     </View>
