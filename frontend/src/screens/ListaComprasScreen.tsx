@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, Modal, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { ChevronLeft, Plus, CheckCircle2, Circle, Trash2, ShoppingBag } from 'lucide-react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface Produto {
   id: string;
@@ -66,23 +67,39 @@ export function ListaComprasScreen() {
     setItens(itens.filter(i => i.id !== id));
   };
 
-  const handleFinalizarCompra = () => {
+  const handleFinalizarCompra = async () => {
     if (noCarrinho.length === 0) {
       Alert.alert("Aviso", "O seu carrinho está vazio!");
       return;
     }
 
-    Alert.alert(
-      "Compra Finalizada! 🎉", 
-      `Você gastou R$ ${totalCarrinho.toFixed(2)} nesta compra.`,
-      [{ 
-        text: "OK", 
-        onPress: () => {
-          setItens(faltamPegar); 
-          navigation.goBack();
-        } 
-      }]
-    );
+    try {
+      const novaCompra = {
+        id: Date.now().toString(),
+        data: new Date().toLocaleDateString('pt-BR'), 
+        total: totalCarrinho,
+        itens: noCarrinho
+      };
+
+      const historicoSalvo = await AsyncStorage.getItem('@Lista-inteligente:historico');
+      const historico = historicoSalvo ? JSON.parse(historicoSalvo) : [];
+      historico.unshift(novaCompra);
+      await AsyncStorage.setItem('@Lista-inteligente:historico', JSON.stringify(historico));
+
+      Alert.alert(
+        "Compra Finalizada! 🎉", 
+        `Você gastou R$ ${totalCarrinho.toFixed(2)} nesta compra.`,
+        [{ 
+          text: "OK", 
+          onPress: () => {
+            setItens(faltamPegar); 
+            navigation.goBack();
+          } 
+        }]
+      );
+    } catch (error) {
+      Alert.alert("Erro", "Não foi possível salvar a compra no histórico.");
+    }
   };
 
   return (
