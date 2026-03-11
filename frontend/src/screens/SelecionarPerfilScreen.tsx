@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { View, Text, FlatList, TouchableOpacity } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { PerfilCard } from '../components/PerfilCard';
 import { Plus } from 'lucide-react-native';
@@ -10,17 +10,20 @@ export function SelecionarPerfilScreen() {
   const [perfis, setPerfis] = useState<string[]>([]);
   const navigation = useNavigation<AppNavigationProp>();
 
-  useEffect(() => {
-    carregarPerfils();
-  }, []);
-
-  async function carregarPerfils() {
-    const data = await AsyncStorage.getItem('@lista-inteligente:profiles');
-    if (data) setPerfis(JSON.parse(data));
-  }
+  // Atualiza a lista sempre que entrar nesta tela
+  useFocusEffect(
+    React.useCallback(() => {
+      async function carregarPerfils() {
+        const data = await AsyncStorage.getItem('@Lista-inteligente:perfis');
+        if (data) setPerfis(JSON.parse(data));
+      }
+      carregarPerfils();
+    }, [])
+  );
 
   const handleSelect = async (nome: string) => {
-    await AsyncStorage.setItem('@lista-inteligente:currentProfile', nome);
+    // Define o perfil atual ao clicar no card
+    await AsyncStorage.setItem('@Lista-inteligente:perfilAtual', nome);
     navigation.navigate('HomeScreen');
   };
 
@@ -41,7 +44,7 @@ export function SelecionarPerfilScreen() {
         )}
         ListFooterComponent={() => (
           <TouchableOpacity 
-            onPress={() => navigation.navigate('PerfilScreen')} // Tela de criar perfil
+            onPress={() => navigation.navigate('PerfilScreen')}
             className="bg-green-600 p-6 rounded-3xl flex-row items-center justify-center mt-4 shadow-lg"
           >
             <Plus color="white" size={24} />
