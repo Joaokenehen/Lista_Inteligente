@@ -45,9 +45,11 @@ $ npm install
 # Execute a aplicação
 $ npx expo start
 ```
-![WhatsApp Image 2026-03-13 at 16 11 34 (2)](https://github.com/user-attachments/assets/e7ccd449-fb77-4fe6-9224-f8f05f14dbc2)
-![WhatsApp Image 2026-03-13 at 16 11 34 (1)](https://github.com/user-attachments/assets/241c0dc3-0cc2-4bbc-9d05-b38bbb2e7aa9)
-![WhatsApp Image 2026-03-13 at 16 11 34](https://github.com/user-attachments/assets/88e7a5dd-198c-44e8-bba1-e5f8c1ec8c28)
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/88e7a5dd-198c-44e8-bba1-e5f8c1ec8c28" width="250" alt="Tela de Seleção de Perfil" />
+  <img src="https://github.com/user-attachments/assets/e7ccd449-fb77-4fe6-9224-f8f05f14dbc2" width="250" alt="Tela Inicial - Home" />
+  <img src="https://github.com/user-attachments/assets/241c0dc3-0cc2-4bbc-9d05-b38bbb2e7aa9" width="250" alt="Tela de Lista de Compras" />
+</p>
 
 ## 🗺️ Roadmap (Futuras Atualizações)
 [ ] Sincronização em nuvem para listas compartilhadas em tempo real.
