@@ -37,7 +37,7 @@ Pré-requisitos: Node.js instalado e o aplicativo **Expo Go** no seu celular.
 $ git clone [https://github.com/seu-usuario/cartflow.git](https://github.com/seu-usuario/cartflow.git)
 
 # Acesse a pasta do projeto
-$ cd cartflow/frontend
+$ cd /frontend
 
 # Instale as dependências
 $ npm install
