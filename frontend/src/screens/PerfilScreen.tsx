@@ -27,7 +27,6 @@ export function PerfilScreen() {
                 await AsyncStorage.setItem('@Lista-inteligente:perfis', JSON.stringify(listaPerfis));
             }
 
-            // 3. Define este nome como o usuário ATUAL
             await AsyncStorage.setItem('@Lista-inteligente:perfilAtual', nome.trim());
             
             Alert.alert("Sucesso", "Nome salvo com sucesso!");
