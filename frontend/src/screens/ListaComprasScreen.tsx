@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, Modal, Alert, KeyboardAvoidingView, Platform } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { ChevronLeft, Plus, CheckCircle2, Circle, Trash2, ShoppingBag } from 'lucide-react-native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { ChevronLeft, Plus, CheckCircle2, Circle, Trash2, ShoppingBag } from 'lucide-react-native';
 
 interface Produto {
   id: string;
@@ -15,9 +15,32 @@ export function ListaComprasScreen() {
   const navigation = useNavigation();
   const [itens, setItens] = useState<Produto[]>([]);
   const [nomeNovoItem, setNomeNovoItem] = useState('');
+  
   const [modalVisivel, setModalVisivel] = useState(false);
   const [itemSelecionado, setItemSelecionado] = useState<Produto | null>(null);
   const [precoDigitado, setPrecoDigitado] = useState('');
+
+  useFocusEffect(
+    React.useCallback(() => {
+      carregarListaPendente();
+    }, [])
+  );
+
+  const carregarListaPendente = async () => {
+    try {
+      const dados = await AsyncStorage.getItem('@Lista-inteligente:listaAtual');
+      if (dados) {
+        setItens(JSON.parse(dados));
+      }
+    } catch (error) {
+      console.error("Erro ao carregar lista pendente", error);
+    }
+  };
+
+  const atualizarLista = async (novaLista: Produto[]) => {
+    setItens(novaLista); // Atualiza a tela
+    await AsyncStorage.setItem('@Lista-inteligente:listaAtual', JSON.stringify(novaLista)); // Salva no celular
+  };
 
   const faltamPegar = itens.filter(i => !i.comprado);
   const noCarrinho = itens.filter(i => i.comprado);
@@ -31,7 +54,8 @@ export function ListaComprasScreen() {
       preco: 0,
       comprado: false
     };
-    setItens([...itens, novoProduto]);
+    
+    atualizarLista([...itens, novoProduto]);
     setNomeNovoItem('');
   };
 
@@ -50,21 +74,25 @@ export function ListaComprasScreen() {
       return;
     }
 
-    setItens(itens.map(i =>
+    const novaLista = itens.map(i =>
       i.id === itemSelecionado.id ? { ...i, preco: precoNum, comprado: true } : i
-    ));
+    );
+    
+    atualizarLista(novaLista);
     setModalVisivel(false);
     setItemSelecionado(null);
   };
 
   const desmarcarItem = (id: string) => {
-    setItens(itens.map(i =>
+    const novaLista = itens.map(i =>
       i.id === id ? { ...i, preco: 0, comprado: false } : i
-    ));
+    );
+    atualizarLista(novaLista);
   };
 
   const removerItem = (id: string) => {
-    setItens(itens.filter(i => i.id !== id));
+    const novaLista = itens.filter(i => i.id !== id);
+    atualizarLista(novaLista);
   };
 
   const handleFinalizarCompra = async () => {
@@ -76,7 +104,7 @@ export function ListaComprasScreen() {
     try {
       const novaCompra = {
         id: Date.now().toString(),
-        data: new Date().toLocaleDateString('pt-BR'), 
+        data: new Date().toLocaleDateString('pt-BR'),
         total: totalCarrinho,
         itens: noCarrinho
       };
@@ -85,23 +113,21 @@ export function ListaComprasScreen() {
       const historico = historicoSalvo ? JSON.parse(historicoSalvo) : [];
       historico.unshift(novaCompra);
       await AsyncStorage.setItem('@Lista-inteligente:historico', JSON.stringify(historico));
+      await atualizarLista(faltamPegar);
 
       Alert.alert(
         "Compra Finalizada! 🎉", 
         `Você gastou R$ ${totalCarrinho.toFixed(2)} nesta compra.`,
         [{ 
           text: "OK", 
-          onPress: () => {
-            setItens(faltamPegar); 
-            navigation.goBack();
-          } 
+          onPress: () => navigation.goBack() 
         }]
       );
     } catch (error) {
       Alert.alert("Erro", "Não foi possível salvar a compra no histórico.");
     }
   };
-
+  
   return (
     <KeyboardAvoidingView 
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
