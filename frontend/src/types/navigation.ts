@@ -6,6 +6,7 @@ export type RootStackParamList = {
     HomeScreen: undefined;
     ListaComprasScreen: undefined;
     HistoricoScreen: { date: string} | undefined;
+    SobreScreen: undefined;
 };
 
 export type AppNavigationProp = NativeStackNavigationProp<RootStackParamList>;

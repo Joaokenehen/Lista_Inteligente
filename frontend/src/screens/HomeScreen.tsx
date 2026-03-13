@@ -2,19 +2,17 @@ import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { AppNavigationProp } from '../types/navigation';
-import { ShoppingCart, History, PlusCircle, ArrowRight, Users } from 'lucide-react-native';
-import AsyncStorage from "@react-native-async-storage/async-storage"
+import { History, PlusCircle, ArrowRight, Users, Info } from 'lucide-react-native';
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export function HomeScreen() {
   const navigation = useNavigation<AppNavigationProp>();
   const [nomeUsuario, setNomeUsuario] = useState("Usuário");
 
-  // useFocusEffect é chamado SEMPRE que a tela aparece
   useFocusEffect(
     React.useCallback(() => {
       async function carregarNome() {
         try {
-          // Buscando a chave padronizada
           const nomeSalvo = await AsyncStorage.getItem("@Lista-inteligente:perfilAtual");
           if (nomeSalvo) {
             setNomeUsuario(nomeSalvo);
@@ -24,7 +22,6 @@ export function HomeScreen() {
         }
       }
       
-      // Chamando a função (isso estava faltando no seu código original)
       carregarNome();
     }, [])
   );
@@ -32,13 +29,21 @@ export function HomeScreen() {
   return (
     <View className="flex-1 bg-slate-50">
       <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-        <View className="bg-green-600 pt-16 pb-20 px-8 rounded-b-[50px] shadow-2xl">
-          <Text className="text-green-100 text-lg font-medium">Lista Inteligente</Text>
-          <Text className="text-white text-4xl font-bold mt-1">Olá, {nomeUsuario}! 👋</Text>
-          <Text className="text-green-50 mt-2 opacity-80">Pronto para economizar hoje?</Text>
+        <View className="bg-green-600 pt-16 pb-20 px-8 rounded-b-[50px] shadow-2xl flex-row justify-between items-start">
+          <View>
+            <Text className="text-green-100 text-lg font-medium">CartFlow</Text>
+            <Text className="text-white text-4xl font-bold mt-1">Olá, {nomeUsuario}! 👋</Text>
+            <Text className="text-green-50 mt-2 opacity-80">Pronto para economizar hoje?</Text>
+          </View>
+          <TouchableOpacity 
+            onPress={() => navigation.navigate('SobreScreen')}
+            className="bg-green-500 p-3 rounded-full shadow-sm mt-2"
+          >
+            <Info color="white" size={24} />
+          </TouchableOpacity>
         </View>
 
-        <View className="px-6 -mt-10">
+        <View className="px-6 -mt-10 mb-10">
           <TouchableOpacity 
             onPress={() => navigation.navigate('ListaComprasScreen')}
             activeOpacity={0.8}
@@ -72,7 +77,7 @@ export function HomeScreen() {
               <View className="bg-purple-100 p-3 rounded-xl mb-2">
                 <Users size={24} color="#9333ea" />
               </View>
-              <Text className="text-slate-800 font-bold">Trocar Perfil</Text>
+              <Text className="text-slate-800 font-bold text-center">Trocar Perfil</Text>
             </TouchableOpacity>
           </View>
         </View>
