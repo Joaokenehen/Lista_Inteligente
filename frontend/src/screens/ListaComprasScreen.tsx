@@ -2,14 +2,8 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, Modal, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { ChevronLeft, Plus, CheckCircle2, Circle, Trash2, ShoppingBag } from 'lucide-react-native';
-
-interface Produto {
-  id: string;
-  nome: string;
-  preco: number;
-  comprado: boolean;
-}
+import { ChevronLeft, Plus, ShoppingBag } from 'lucide-react-native';
+import { ProdutoCard, Produto } from '../components/ProdutoCard';
 
 export function ListaComprasScreen() {
   const navigation = useNavigation();
@@ -163,19 +157,12 @@ export function ListaComprasScreen() {
         </Text>
         
         {faltamPegar.map((item) => (
-          <TouchableOpacity 
+          <ProdutoCard
             key={item.id}
+            item={item}
             onPress={() => abrirModalPreco(item)}
-            className="bg-white p-4 rounded-2xl mb-3 flex-row justify-between items-center shadow-sm border border-slate-100"
-          >
-            <View className="flex-row items-center gap-3">
-              <Circle color="#cbd5e1" size={24} />
-              <Text className="text-slate-800 font-medium text-lg">{item.nome}</Text>
-            </View>
-            <TouchableOpacity onPress={() => removerItem(item.id)} className="p-2">
-              <Trash2 color="#ef4444" size={20} />
-            </TouchableOpacity>
-          </TouchableOpacity>
+            onRemove={() => removerItem(item.id)}
+          />
         ))}
 
         <Text className="text-slate-500 font-bold mt-6 mb-3 uppercase text-sm ml-2">
@@ -183,19 +170,11 @@ export function ListaComprasScreen() {
         </Text>
         
         {noCarrinho.map((item) => (
-          <TouchableOpacity 
+          <ProdutoCard
             key={item.id}
+            item={item}
             onPress={() => desmarcarItem(item.id)}
-            className="bg-green-50 p-4 rounded-2xl mb-3 flex-row justify-between items-center border border-green-200"
-          >
-            <View className="flex-row items-center gap-3">
-              <CheckCircle2 color="#16a34a" size={24} />
-              <Text className="text-slate-500 font-medium text-lg line-through">{item.nome}</Text>
-            </View>
-            <View className="flex-row items-center gap-4">
-              <Text className="text-green-700 font-bold text-lg">R$ {item.preco.toFixed(2)}</Text>
-            </View>
-          </TouchableOpacity>
+          />
         ))}
         <View className="h-20" />
       </ScrollView>
