@@ -1,22 +1,18 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, FlatList, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, FlatList, Alert, Modal } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { ChevronLeft, ShoppingBag, Calendar, Trash2, CheckCircle2, Circle, CheckSquare } from 'lucide-react-native';
+import { ChevronLeft, ShoppingBag, Trash2, Circle, CheckSquare } from 'lucide-react-native';
 import { AppNavigationProp } from '../types/navigation';
-
-interface CompraHistorico {
-  id: string;
-  data: string;
-  total: number;
-  itens: any[];
-}
+import { HistoricoCard, CompraHistorico } from '../components/HistoricoCard';
 
 export function HistoricoScreen() {
   const navigation = useNavigation<AppNavigationProp>();
   const [historico, setHistorico] = useState<CompraHistorico[]>([]);
   const [modoExclusao, setModoExclusao] = useState(false);
   const [selecionados, setSelecionados] = useState<string[]>([]);
+  const [modalVisivel, setModalVisivel] = useState(false);
+  const [compraSelecionada, setCompraSelecionada] = useState<CompraHistorico | null>(null);
 
   useFocusEffect(
     React.useCallback(() => {
@@ -51,6 +47,11 @@ export function HistoricoScreen() {
     } else {
       setSelecionados(historico.map(h => h.id));
     }
+  };
+
+  const abrirDetalhes = (compra: CompraHistorico) => {
+    setCompraSelecionada(compra);
+    setModalVisivel(true);
   };
 
   const confirmarExclusao = () => {
@@ -146,37 +147,54 @@ export function HistoricoScreen() {
           const isSelecionado = selecionados.includes(item.id);
 
           return (
-            <TouchableOpacity 
-              activeOpacity={modoExclusao ? 0.7 : 1}
-              onPress={() => modoExclusao ? alternarSelecao(item.id) : null}
+            <HistoricoCard
+              item={item}
+              modoExclusao={modoExclusao}
+              isSelecionado={isSelecionado}
+              onPress={() => modoExclusao ? alternarSelecao(item.id) : abrirDetalhes(item)}
               onLongPress={() => {
                 if (!modoExclusao) {
                   setModoExclusao(true);
                   alternarSelecao(item.id);
                 }
               }}
-              className={`bg-white p-5 rounded-3xl mb-4 shadow-sm border flex-row justify-between items-center ${isSelecionado ? 'border-red-400 bg-red-50' : 'border-slate-100'}`}
-            >
-              <View className="flex-row items-center gap-4 flex-1">
-                {modoExclusao && (
-                  <View className="mr-2">
-                    {isSelecionado ? <CheckCircle2 color="#ef4444" size={24} /> : <Circle color="#cbd5e1" size={24} />}
-                  </View>
-                )}
-                
-                <View className={`${modoExclusao ? 'bg-red-100' : 'bg-blue-50'} p-4 rounded-2xl`}>
-                  <Calendar color={modoExclusao ? "#ef4444" : "#2563eb"} size={24} />
-                </View>
-                <View>
-                  <Text className="text-slate-800 font-bold text-lg">{item.data}</Text>
-                  <Text className="text-slate-500 text-sm">{item.itens.length} itens comprados</Text>
-                </View>
-              </View>
-              <Text className="text-slate-900 font-black text-xl">R$ {item.total.toFixed(2)}</Text>
-            </TouchableOpacity>
+            />
           );
         }}
       />
+      
+      <Modal visible={modalVisivel} transparent animationType="fade">
+        <View className="flex-1 bg-black/50 justify-center items-center px-6">
+          <View className="bg-white w-full p-6 rounded-[32px] shadow-2xl max-h-[80%]">
+            <Text className="text-slate-900 text-xl font-bold mb-1 text-center">
+              Detalhes da Compra
+            </Text>
+            <Text className="text-slate-500 text-center mb-6">
+              {compraSelecionada?.data} - R$ {compraSelecionada?.total.toFixed(2)}
+            </Text>
+            
+            <FlatList
+              data={compraSelecionada?.itens}
+              keyExtractor={(item) => item.id}
+              renderItem={({ item }) => (
+                <View className="flex-row justify-between items-center mb-3">
+                  <Text className="text-slate-800">{item.nome}</Text>
+                  <Text className="text-slate-800">R$ {item.preco.toFixed(2)}</Text>
+                </View>
+              )}
+            />
+
+            <View className="flex-row gap-3">
+              <TouchableOpacity 
+                onPress={() => setModalVisivel(false)}
+                className="flex-1 bg-blue-600 p-4 rounded-2xl items-center mt-4"
+              >
+                <Text className="text-white font-bold text-lg">Fechar</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
