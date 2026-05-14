@@ -7,6 +7,7 @@ export interface Produto {
   nome: string;
   preco: number;
   comprado: boolean;
+  quantidade?: number;
 }
 
 interface ProdutoCardProps {
@@ -28,6 +29,11 @@ export function ProdutoCard({ item, onPress, onRemove }: ProdutoCardProps) {
         </View>
         <View className="flex-row items-center gap-4">
           <Text className="text-green-700 font-bold text-lg">R$ {item.preco.toFixed(2)}</Text>
+          {item.quantidade !== undefined && (
+            <Text className="text-slate-500 font-medium text-lg">
+              x{item.quantidade}
+            </Text>
+          )}
         </View>
       </TouchableOpacity>
     );

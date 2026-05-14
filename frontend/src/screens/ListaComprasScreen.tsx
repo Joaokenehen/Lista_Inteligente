@@ -2,17 +2,18 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, Modal, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { ChevronLeft, Plus, ShoppingBag } from 'lucide-react-native';
+import { ChevronLeft, Plus, ShoppingBag, Minus, Trash } from 'lucide-react-native';
 import { ProdutoCard, Produto } from '../components/ProdutoCard';
 
 export function ListaComprasScreen() {
   const navigation = useNavigation();
   const [itens, setItens] = useState<Produto[]>([]);
   const [nomeNovoItem, setNomeNovoItem] = useState('');
-  
   const [modalVisivel, setModalVisivel] = useState(false);
   const [itemSelecionado, setItemSelecionado] = useState<Produto | null>(null);
   const [precoDigitado, setPrecoDigitado] = useState('');
+  const [quantidadeDigitada, setQuantidadeDigitada] = useState(1);
+  const [nomeEditado, setNomeEditado] = useState('');
 
   useFocusEffect(
     React.useCallback(() => {
@@ -38,7 +39,7 @@ export function ListaComprasScreen() {
 
   const faltamPegar = itens.filter(i => !i.comprado);
   const noCarrinho = itens.filter(i => i.comprado);
-  const totalCarrinho = noCarrinho.reduce((acc, item) => acc + item.preco, 0);
+  const totalCarrinho = noCarrinho.reduce((acc, item) => acc + (item.preco * (item.quantidade || 1)), 0);
 
   const handleAdicionarItem = () => {
     if (!nomeNovoItem.trim()) return;
@@ -46,7 +47,8 @@ export function ListaComprasScreen() {
       id: Date.now().toString(),
       nome: nomeNovoItem.trim(),
       preco: 0,
-      comprado: false
+      comprado: false,
+      quantidade: 1
     };
     
     atualizarLista([...itens, novoProduto]);
@@ -55,12 +57,20 @@ export function ListaComprasScreen() {
 
   const abrirModalPreco = (item: Produto) => {
     setItemSelecionado(item);
+    setNomeEditado(item.nome);
     setPrecoDigitado('');
     setModalVisivel(true);
+    setQuantidadeDigitada(item.quantidade || 1)
   };
 
   const confirmarPreco = () => {
     if (!itemSelecionado) return;
+
+    if (!nomeEditado.trim()) {
+      Alert.alert("Aviso", "O nome do produto não pode ficar vazio.");
+      return;
+    }
+
     const precoNum = parseFloat(precoDigitado.replace(',', '.'));
     
     if (isNaN(precoNum) || precoNum <= 0) {
@@ -69,7 +79,7 @@ export function ListaComprasScreen() {
     }
 
     const novaLista = itens.map(i =>
-      i.id === itemSelecionado.id ? { ...i, preco: precoNum, comprado: true } : i
+      i.id === itemSelecionado.id ? { ...i, nome: nomeEditado.trim(), preco: precoNum, quantidade: quantidadeDigitada, comprado: true } : i
     );
     
     atualizarLista(novaLista);
@@ -82,6 +92,40 @@ export function ListaComprasScreen() {
       i.id === id ? { ...i, preco: 0, comprado: false } : i
     );
     atualizarLista(novaLista);
+  };
+
+  const confirmarDesmarcar = (item: Produto) => {
+      Alert.alert(
+        "O que deseja fazer?",
+        `Produto: ${item.nome}`,
+        [
+          { text: "Cancelar", style: "cancel" },
+          { 
+            text: "Editar Item", 
+            onPress: () => abrirModalPreco(item) 
+          },
+          { 
+            text: "Tirar do Carrinho", 
+            style: "destructive",
+            onPress: () => desmarcarItem(item.id) 
+          }
+        ]
+      );
+    };
+
+  const confirmarRemocao = (id: string) => {
+    Alert.alert(
+      "Remover Item",
+      "Tem certeza que deseja apagar este item da lista?",
+      [
+        { text: "Não, cancelar", style: "cancel" },
+        { 
+          text: "Sim, apagar", 
+          style: "destructive", 
+          onPress: () => removerItem(id) // Chama a função original de remover só se clicar em Sim
+        }
+      ]
+    );
   };
 
   const removerItem = (id: string) => {
@@ -122,7 +166,7 @@ export function ListaComprasScreen() {
     }
   };
   
-  return (
+return (
     <KeyboardAvoidingView 
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       className="flex-1 bg-slate-50"
@@ -161,7 +205,7 @@ export function ListaComprasScreen() {
             key={item.id}
             item={item}
             onPress={() => abrirModalPreco(item)}
-            onRemove={() => removerItem(item.id)}
+            onRemove={() => confirmarRemocao(item.id)}
           />
         ))}
 
@@ -173,7 +217,7 @@ export function ListaComprasScreen() {
           <ProdutoCard
             key={item.id}
             item={item}
-            onPress={() => desmarcarItem(item.id)}
+            onPress={() => confirmarDesmarcar(item)}
           />
         ))}
         <View className="h-20" />
@@ -196,34 +240,63 @@ export function ListaComprasScreen() {
       <Modal visible={modalVisivel} transparent animationType="fade">
         <View className="flex-1 bg-black/50 justify-center items-center px-6">
           <View className="bg-white w-full p-6 rounded-[32px] shadow-2xl">
-            <Text className="text-slate-900 text-xl font-bold mb-1 text-center">
-              Qual o preço?
-            </Text>
-            <Text className="text-slate-500 text-center mb-6">
-              {itemSelecionado?.nome}
+            <Text className="text-slate-900 text-xl font-bold mb-6 text-center">
+              Editar Item
             </Text>
             
+            {/* ✨ NOVO: Campo para editar o nome do produto dentro do modal */}
+            <Text className="text-slate-700 font-bold mb-2">Nome do Produto</Text>
             <TextInput 
-              placeholder="R$ 0,00"
-              keyboardType="numeric"
-              className="bg-slate-100 p-5 rounded-2xl text-center text-2xl font-bold text-slate-800 mb-6"
-              value={precoDigitado}
-              onChangeText={setPrecoDigitado}
-              autoFocus
+              placeholder="Nome do item"
+              className="bg-slate-100 p-4 rounded-2xl text-slate-800 font-medium mb-4"
+              value={nomeEditado}
+              onChangeText={setNomeEditado}
             />
+            
+            <View className="flex-row gap-4 mb-4">
+              <View className="flex-1">
+                <Text className="text-slate-700 font-bold mb-2">Preço Unitário</Text>
+                <TextInput 
+                  placeholder="0,00"
+                  keyboardType="numeric"
+                  className="bg-slate-100 p-4 rounded-2xl text-center text-xl font-bold text-slate-800"
+                  value={precoDigitado}
+                  onChangeText={setPrecoDigitado}
+                />
+              </View>
 
-            <View className="flex-row gap-3">
+              <View className="flex-1">
+                <Text className="text-slate-700 font-bold mb-2 text-center">Qtd.</Text>
+                <View className="flex-row items-center justify-between bg-slate-100 p-2 rounded-2xl">
+                  <TouchableOpacity 
+                    onPress={() => setQuantidadeDigitada(prev => Math.max(1, prev - 1))}
+                    className="bg-white p-2 rounded-xl shadow-sm"
+                  >
+                    <Minus color="#64748b" size={20} />
+                  </TouchableOpacity>
+                  <Text className="text-lg font-bold text-slate-800">{quantidadeDigitada}</Text>
+                  <TouchableOpacity 
+                    onPress={() => setQuantidadeDigitada(prev => prev + 1)}
+                    className="bg-white p-2 rounded-xl shadow-sm"
+                  >
+                    <Plus color="#16a34a" size={20} />
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+
+            <View className="flex-row gap-3 mt-4">
               <TouchableOpacity 
                 onPress={() => setModalVisivel(false)}
-                className="flex-1 bg-slate-100 p-4 rounded-2xl items-center"
+                className="flex-1 bg-slate-200 p-4 rounded-2xl items-center"
               >
                 <Text className="text-slate-600 font-bold">Cancelar</Text>
               </TouchableOpacity>
               <TouchableOpacity 
                 onPress={confirmarPreco}
-                className="flex-1 bg-green-600 p-4 rounded-2xl items-center"
+                className="flex-1 bg-green-600 p-4 rounded-2xl items-center shadow-lg shadow-green-200"
               >
-                <Text className="text-white font-bold">Confirmar</Text>
+                <Text className="text-white font-bold">Salvar</Text>
               </TouchableOpacity>
             </View>
           </View>
