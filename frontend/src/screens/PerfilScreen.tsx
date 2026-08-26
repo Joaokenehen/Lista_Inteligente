@@ -16,6 +16,11 @@ export function PerfilScreen() {
             return
         }
 
+        if (nome.trim().length > 20) {
+            Alert.alert("Aviso", "O nome do perfil não pode ter mais de 20 caracteres.");
+            return;
+        }
+
         try {
             const perfisSalvos = await AsyncStorage.getItem('@Lista-inteligente:perfis');
             let listaPerfis = perfisSalvos ? JSON.parse(perfisSalvos) : [];
@@ -59,6 +64,7 @@ export function PerfilScreen() {
                     placeholder="Ex: João"
                     value={nome}
                     onChangeText={setNome}
+                    maxLength={20}
                 />
 
                 <TouchableOpacity 

@@ -4,7 +4,8 @@ export type RootStackParamList = {
     SelecionarPerfilScreen: undefined;
     PerfilScreen: undefined;
     HomeScreen: undefined;
-    ListaComprasScreen: undefined;
+    ListaComprasScreen: { listaId: string };
+    PlanejamentoScreen: { listaid?: string };
     HistoricoScreen: { date: string} | undefined;
     SobreScreen: undefined;
 };

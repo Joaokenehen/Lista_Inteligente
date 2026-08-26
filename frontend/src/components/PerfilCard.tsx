@@ -10,7 +10,6 @@ interface PerfilCardProps {
 
 export function PerfilCard({ nome, onPress, onEdit }: PerfilCardProps) {
   return (
-    // A View principal segura tudo e define o tamanho
     <View className="relative w-[47%] mb-6">
       
       {/* Botão Principal (Abre o Perfil) */}
@@ -26,7 +25,6 @@ export function PerfilCard({ nome, onPress, onEdit }: PerfilCardProps) {
         </Text>
       </TouchableOpacity>
 
-      {/* Botão de Editar flutuante (Separado do botão principal para não bugar) */}
       <TouchableOpacity 
         onPress={onEdit} 
         className="absolute top-2 right-2 p-3 bg-slate-100 rounded-full z-20 shadow-sm border border-slate-200"

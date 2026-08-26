@@ -9,8 +9,6 @@ import { AppNavigationProp } from '../types/navigation';
 export function SelecionarPerfilScreen() {
   const [perfis, setPerfis] = useState<string[]>([]);
   const navigation = useNavigation<AppNavigationProp>();
-
-  // Estados para Edição
   const [modalVisivel, setModalVisivel] = useState(false);
   const [perfilEditando, setPerfilEditando] = useState('');
   const [novoNome, setNovoNome] = useState('');
@@ -130,6 +128,7 @@ export function SelecionarPerfilScreen() {
               className="bg-slate-100 p-5 rounded-2xl text-lg font-medium text-slate-800 mb-6"
               value={novoNome}
               onChangeText={setNovoNome}
+              maxLength={20}
               autoFocus
             />
 

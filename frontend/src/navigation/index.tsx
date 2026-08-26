@@ -6,8 +6,8 @@ import { HistoricoScreen } from '../screens/HistoricoScreen';
 import { PerfilScreen } from '../screens/PerfilScreen';
 import { SelecionarPerfilScreen } from '../screens/SelecionarPerfilScreen';
 import { SobreScreen } from '../screens/SobreScreen';
+import { PlanejamentoScreen } from '../screens/PlanejamentoScreen';
 
-// Crie o Stack sem desestruturar o 'Screen' isoladamente
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export function AppRoutes() {
@@ -21,6 +21,7 @@ export function AppRoutes() {
       <Stack.Screen name="SelecionarPerfilScreen" component={SelecionarPerfilScreen} />
       <Stack.Screen name="PerfilScreen" component={PerfilScreen} />
       <Stack.Screen name="HomeScreen" component={HomeScreen} />
+      <Stack.Screen name="PlanejamentoScreen" component={PlanejamentoScreen} />
       <Stack.Screen name="ListaComprasScreen" component={ListaComprasScreen} />
       <Stack.Screen name="HistoricoScreen" component={HistoricoScreen} />
       <Stack.Screen name="SobreScreen" component={SobreScreen} />
