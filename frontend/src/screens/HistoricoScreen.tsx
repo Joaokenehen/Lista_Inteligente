@@ -128,7 +128,7 @@ export function HistoricoScreen() {
         <View className="px-6 py-6 border-b border-slate-200 bg-white shadow-sm z-10">
           <Text className="text-slate-500 font-medium mb-1">Total acumulado</Text>
           <Text className="text-blue-700 text-4xl font-black">
-            R$ {historico.reduce((acc, curr) => acc + curr.total, 0).toFixed(2)}
+            R$ {historico.reduce((acc, curr) => acc + (curr.valorTotal || 0), 0).toFixed(2)}
           </Text>
         </View>
       )}
@@ -170,7 +170,7 @@ export function HistoricoScreen() {
               Detalhes da Compra
             </Text>
             <Text className="text-slate-500 text-center mb-6">
-              {compraSelecionada?.data} - R$ {compraSelecionada?.total.toFixed(2)}
+              {compraSelecionada?.data} - R$ {compraSelecionada?.valorTotal?.toFixed(2) || '0.00'}
             </Text>
             
             <FlatList

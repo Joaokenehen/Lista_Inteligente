@@ -5,7 +5,8 @@ import { Calendar, CheckCircle2, Circle } from 'lucide-react-native';
 export interface CompraHistorico {
   id: string;
   data: string;
-  total: number;
+  valorTotal: number;
+  total?: number;
   itens: any[];
 }
 
@@ -46,7 +47,7 @@ export function HistoricoCard({
           <Text className="text-slate-500 text-sm">{item.itens.length} itens comprados</Text>
         </View>
       </View>
-      <Text className="text-slate-900 font-black text-xl">R$ {item.total.toFixed(2)}</Text>
+        <Text className="text-slate-900 font-black text-xl">R$ {(item.valorTotal ?? item.total ?? 0).toFixed(2)}</Text>
     </TouchableOpacity>
   );
 }
