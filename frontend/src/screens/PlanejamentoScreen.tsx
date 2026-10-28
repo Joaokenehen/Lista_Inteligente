@@ -33,17 +33,7 @@ export function PlanejamentoScreen() {
     setItens(itens.filter(i => i.id !== id));
   };
 
-  const handleSalvarLista = async () => {
-    if (!nomeLista.trim()) {
-      Alert.alert("Aviso", "Dê um nome para sua lista (ex: Compra da Semana)");
-      return;
-    }
-
-    if (itens.length === 0) {
-      Alert.alert("Aviso", "Adicione pelo menos um item à lista.");
-      return;
-    }
-
+  const salvarLista = async () => {
     try {
       const novaLista = {
         id: Date.now().toString() + Math.random().toString(36).substring(2, 9),
@@ -67,6 +57,26 @@ export function PlanejamentoScreen() {
     }
   };
 
+  const handleSalvarLista = () => {
+    if (!nomeLista.trim()) {
+      Alert.alert("Aviso", "Dê um nome para sua lista (ex: Compra da Semana)");
+      return;
+    }
+
+    if (itens.length === 0) {
+      Alert.alert(
+        "Lista sem itens",
+        "Deseja criar uma lista sem itens?",
+        [
+          { text: "Não", style: "cancel" },
+          { text: "Sim", onPress: () => { void salvarLista(); } },
+        ]
+      );
+      return;
+    }
+
+    void salvarLista();
+  };
   return (
     <KeyboardAvoidingView 
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
