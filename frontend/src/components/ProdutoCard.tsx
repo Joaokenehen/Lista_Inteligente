@@ -15,9 +15,11 @@ interface ProdutoCardProps {
   item: Produto;
   onPress: () => void;
   onRemove?: () => void;
+  onSelect?: () => void;
+  selecionado?: boolean;
 }
 
-export function ProdutoCard({ item, onPress, onRemove }: ProdutoCardProps) {
+export function ProdutoCard({ item, onPress, onRemove, onSelect, selecionado = false }: ProdutoCardProps) {
   if (item.comprado) {
     return (
       <TouchableOpacity 
@@ -43,19 +45,20 @@ export function ProdutoCard({ item, onPress, onRemove }: ProdutoCardProps) {
   }
 
   return (
-    <TouchableOpacity 
-      onPress={onPress}
-      className="bg-white p-4 rounded-2xl mb-3 flex-row justify-between items-center shadow-sm border border-slate-100"
-    >
-      <View className="flex-row items-center gap-3">
-        <Circle color="#cbd5e1" size={24} />
+    <View className={`bg-white p-4 rounded-2xl mb-3 flex-row justify-between items-center shadow-sm border ${selecionado ? 'border-blue-400 bg-blue-50' : 'border-slate-100'}`}>
+      <TouchableOpacity onPress={onSelect} className="p-1 mr-2" hitSlop={8}>
+        {selecionado
+          ? <CheckCircle2 color="#2563eb" size={24} />
+          : <Circle color="#cbd5e1" size={24} />}
+      </TouchableOpacity>
+      <TouchableOpacity onPress={onPress} className="flex-1 py-1">
         <Text className="text-slate-800 font-medium text-lg">{item.nome}</Text>
-      </View>
+      </TouchableOpacity>
       {onRemove && (
         <TouchableOpacity onPress={onRemove} className="p-2">
           <Trash2 color="#ef4444" size={20} />
         </TouchableOpacity>
       )}
-    </TouchableOpacity>
+    </View>
   );
 }

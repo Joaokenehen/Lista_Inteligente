@@ -16,6 +16,7 @@ export function ListaComprasScreen() {
   const { listaId } = route.params;
   const [listaAtual, setListaAtual] = useState<ListaAtiva | null>(null);
   const [itens, setItens] = useState<ItemPlanejado[]>([]);
+  const [itensSelecionados, setItensSelecionados] = useState<string[]>([]);
   const [nomeNovoItem, setNomeNovoItem] = useState('');
   const [modalVisivel, setModalVisivel] = useState(false);
   const [itemSelecionado, setItemSelecionado] = useState<ItemPlanejado | null>(null);
@@ -147,6 +148,7 @@ export function ListaComprasScreen() {
     );
     
     atualizarListaLocal(novaLista);
+    setItensSelecionados(ids => ids.filter(id => id !== itemSelecionado.id));
     setModalVisivel(false);
     setItemSelecionado(null);
   };
@@ -195,6 +197,33 @@ export function ListaComprasScreen() {
   const removerItem = (id: string) => {
     const novaLista = itens.filter(i => i.id !== id);
     atualizarListaLocal(novaLista);
+    setItensSelecionados(ids => ids.filter(itemId => itemId !== id));
+  };
+
+  const alternarSelecaoItem = (id: string) => {
+    setItensSelecionados(ids =>
+      ids.includes(id) ? ids.filter(itemId => itemId !== id) : [...ids, id]
+    );
+  };
+
+  const confirmarRemocaoSelecionados = () => {
+    if (itensSelecionados.length === 0) return;
+
+    Alert.alert(
+      "Excluir itens selecionados",
+      `Deseja excluir ${itensSelecionados.length} item(ns) da lista?`,
+      [
+        { text: "Cancelar", style: "cancel" },
+        {
+          text: "Excluir",
+          style: "destructive",
+          onPress: () => {
+            atualizarListaLocal(itens.filter(item => !itensSelecionados.includes(item.id)));
+            setItensSelecionados([]);
+          }
+        }
+      ]
+    );
   };
 
   const handleFinalizarCompra = async () => {
@@ -343,6 +372,8 @@ export function ListaComprasScreen() {
             item={item as any}
             onPress={() => abrirModalPreco(item)}
             onRemove={() => confirmarRemocao(item.id)}
+            onSelect={() => alternarSelecaoItem(item.id)}
+            selecionado={itensSelecionados.includes(item.id)}
           />
         ))}
 
@@ -365,13 +396,24 @@ export function ListaComprasScreen() {
           <Text className="text-slate-500 text-sm font-medium">Total da Compra</Text>
           <Text className="text-slate-900 text-3xl font-black">R$ {totalCarrinho.toFixed(2)}</Text>
         </View>
-        <TouchableOpacity 
-          onPress={handleFinalizarCompra}
-          className="bg-green-600 px-6 py-4 rounded-2xl flex-row items-center shadow-lg shadow-green-200"
-        >
-          <ShoppingBag color="white" size={20} className="mr-2" />
-          <Text className="text-white font-bold ml-2">Finalizar</Text>
-        </TouchableOpacity>
+        <View className="items-end gap-2">
+          {itensSelecionados.length > 0 && (
+            <TouchableOpacity
+              onPress={confirmarRemocaoSelecionados}
+              className="bg-red-50 px-4 py-2 rounded-xl flex-row items-center border border-red-200"
+            >
+              <Trash color="#dc2626" size={18} />
+              <Text className="text-red-700 font-bold ml-2">Excluir ({itensSelecionados.length})</Text>
+            </TouchableOpacity>
+          )}
+          <TouchableOpacity
+            onPress={handleFinalizarCompra}
+            className="bg-green-600 px-6 py-4 rounded-2xl flex-row items-center shadow-lg shadow-green-200"
+          >
+            <ShoppingBag color="white" size={20} className="mr-2" />
+            <Text className="text-white font-bold ml-2">Finalizar</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       <Modal visible={modalVisivel} transparent animationType="fade">
