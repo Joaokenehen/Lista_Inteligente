@@ -534,6 +534,8 @@ export function ListaComprasScreen() {
               value={nomeListaEditado}
               onChangeText={setNomeListaEditado}
               maxLength={40}
+              returnKeyType="done"
+              onSubmitEditing={salvarNomeLista}
               autoFocus
             />
             
