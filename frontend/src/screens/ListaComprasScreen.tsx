@@ -20,6 +20,7 @@ export function ListaComprasScreen() {
   const [modalVisivel, setModalVisivel] = useState(false);
   const [itemSelecionado, setItemSelecionado] = useState<ItemPlanejado | null>(null);
   const [precoDigitado, setPrecoDigitado] = useState('');
+  const [focarCampoPreco, setFocarCampoPreco] = useState(false);
   const [quantidadeDigitada, setQuantidadeDigitada] = useState(1);
   const [nomeEditado, setNomeEditado] = useState('');
   const [modalEdicaoListaVisivel, setModalEdicaoListaVisivel] = useState(false);
@@ -86,11 +87,13 @@ export function ListaComprasScreen() {
     
     atualizarListaLocal([...itens, novoProduto]);
     setNomeNovoItem('');
+    abrirModalPreco(novoProduto, true);
   };
 
-  const abrirModalPreco = (item: ItemPlanejado) => {
+  const abrirModalPreco = (item: ItemPlanejado, focarPreco = false) => {
     setItemSelecionado(item);
     setNomeEditado(item.nome);
+    setFocarCampoPreco(focarPreco);
 
     if (item.preco > 0) {  
       const precoFormatado = item.preco.toFixed(2).replace('.', ',').replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.');
@@ -365,6 +368,9 @@ export function ListaComprasScreen() {
                   className="bg-slate-100 p-4 rounded-2xl text-center text-xl font-bold text-slate-800"
                   valor={precoDigitado}
                   aoMudarTexto={setPrecoDigitado}
+                  autoFocus={focarCampoPreco}
+                  returnKeyType="done"
+                  onSubmitEditing={confirmarPreco}
                   maxLength={14} // Aumentado um pouco para não cortar valores mais altos com a máscara
                 />
               </View>
