@@ -8,6 +8,7 @@ export interface Produto {
   preco: number;
   comprado: boolean;
   quantidade?: number;
+  porPeso?: boolean;
 }
 
 interface ProdutoCardProps {
@@ -28,10 +29,12 @@ export function ProdutoCard({ item, onPress, onRemove }: ProdutoCardProps) {
           <Text className="text-slate-500 font-medium text-lg line-through">{item.nome}</Text>
         </View>
         <View className="flex-row items-center gap-4">
-          <Text className="text-green-700 font-bold text-lg">R$ {item.preco.toFixed(2)}</Text>
+          <Text className="text-green-700 font-bold text-lg">
+            R$ {(item.porPeso ? item.preco * (item.quantidade || 1) : item.preco).toFixed(2)}
+          </Text>
           {item.quantidade !== undefined && (
             <Text className="text-slate-500 font-medium text-lg">
-              x{item.quantidade}
+              {item.porPeso ? `${item.quantidade} kg` : `x${item.quantidade}`}
             </Text>
           )}
         </View>

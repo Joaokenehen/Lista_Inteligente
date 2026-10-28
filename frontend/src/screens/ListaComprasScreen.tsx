@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, Modal, Alert, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, Modal, Alert, KeyboardAvoidingView, Platform, Switch } from 'react-native';
 import { useNavigation, useRoute, RouteProp, useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ChevronLeft, Plus, ShoppingBag, Minus, Trash, Pencil } from 'lucide-react-native';
@@ -22,6 +22,8 @@ export function ListaComprasScreen() {
   const [precoDigitado, setPrecoDigitado] = useState('');
   const [focarCampoPreco, setFocarCampoPreco] = useState(false);
   const [quantidadeDigitada, setQuantidadeDigitada] = useState(1);
+  const [pesoDigitado, setPesoDigitado] = useState('');
+  const [porPeso, setPorPeso] = useState(false);
   const [nomeEditado, setNomeEditado] = useState('');
   const [modalEdicaoListaVisivel, setModalEdicaoListaVisivel] = useState(false);
   const [nomeListaEditado, setNomeListaEditado] = useState('');
@@ -74,6 +76,11 @@ export function ListaComprasScreen() {
   const faltamPegar = itens.filter(i => !i.comprado);
   const noCarrinho = itens.filter(i => i.comprado);
   const totalCarrinho = noCarrinho.reduce((acc, item) => acc + (item.preco * (item.quantidade || 1)), 0);
+  const quantidadeOuPesoAtual = porPeso
+    ? (parseFloat(pesoDigitado.trim().replace(',', '.')) || 0)
+    : quantidadeDigitada;
+  const precoAtual = parseFloat(precoDigitado.trim().replace(/\./g, '').replace(',', '.')) || 0;
+  const valorEstimadoItem = precoAtual * quantidadeOuPesoAtual;
 
   const handleAdicionarItem = () => {
     if (!nomeNovoItem.trim()) return;
@@ -94,6 +101,8 @@ export function ListaComprasScreen() {
     setItemSelecionado(item);
     setNomeEditado(item.nome);
     setFocarCampoPreco(focarPreco);
+    setPorPeso(item.porPeso || false);
+    setPesoDigitado(item.porPeso ? (item.quantidade || 0).toFixed(3).replace('.', ',') : '');
 
     if (item.preco > 0) {  
       const precoFormatado = item.preco.toFixed(2).replace('.', ',').replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.');
@@ -117,12 +126,21 @@ export function ListaComprasScreen() {
     const precoLimpo = precoDigitado.trim().replace(/\./g, '').replace(',', '.');
     const precoNum = parseFloat(precoLimpo);
     const temPrecoValido = !isNaN(precoNum) && precoNum > 0;
+    const quantidadeOuPeso = porPeso
+      ? parseFloat(pesoDigitado.trim().replace(',', '.'))
+      : quantidadeDigitada;
+
+    if (!Number.isFinite(quantidadeOuPeso) || quantidadeOuPeso <= 0) {
+      Alert.alert("Aviso", porPeso ? "Informe um peso válido em kg." : "A quantidade deve ser maior que zero.");
+      return;
+    }
 
     const novaLista = itens.map(i =>
       i.id === itemSelecionado.id ? { 
         ...i, 
         nome: nomeEditado.trim(), 
-        quantidade: quantidadeDigitada, 
+        quantidade: quantidadeOuPeso,
+        porPeso,
         preco: temPrecoValido ? precoNum : 0, 
         comprado: temPrecoValido ? true : false 
       } : i
@@ -131,6 +149,17 @@ export function ListaComprasScreen() {
     atualizarListaLocal(novaLista);
     setModalVisivel(false);
     setItemSelecionado(null);
+  };
+
+  const mascararPeso = (texto: string) => {
+    const digitos = texto.replace(/\D/g, '');
+    if (!digitos) {
+      setPesoDigitado('');
+      return;
+    }
+
+    const pesoEmKg = parseInt(digitos, 10) / 1000;
+    setPesoDigitado(pesoEmKg.toFixed(3).replace('.', ','));
   };
 
   const desmarcarItem = (id: string) => {
@@ -180,7 +209,8 @@ export function ListaComprasScreen() {
         nome: item.nome,
         quantidade: item.quantidade,
         preco: item.preco,
-        foiComprado: item.comprado
+        foiComprado: item.comprado,
+        porPeso: item.porPeso
       }));
 
       const novaCompra: ComprasHistorico = {
@@ -359,10 +389,26 @@ export function ListaComprasScreen() {
               onChangeText={setNomeEditado}
               maxLength={45}
             />
+
+            <View className="flex-row items-center justify-between mb-4 bg-slate-50 p-3 rounded-2xl">
+              <View>
+                <Text className="text-slate-700 font-bold">Item vendido por peso</Text>
+                <Text className="text-slate-500 text-xs">Ative para informar o peso em kg</Text>
+              </View>
+              <Switch
+                value={porPeso}
+                onValueChange={(ativado) => {
+                  setPorPeso(ativado);
+                  if (ativado) setPesoDigitado('');
+                }}
+                trackColor={{ false: '#cbd5e1', true: '#86efac' }}
+                thumbColor={porPeso ? '#16a34a' : '#f8fafc'}
+              />
+            </View>
             
             <View className="flex-row gap-4 mb-4">
               <View className="flex-1">
-                <Text className="text-slate-700 font-bold mb-2">Preço Unitário</Text>
+                <Text className="text-slate-700 font-bold mb-2">{porPeso ? "Preço por kg" : "Preço unitário"}</Text>
                 <CampoMoeda
                   placeholder="0,00"
                   className="bg-slate-100 p-4 rounded-2xl text-center text-xl font-bold text-slate-800"
@@ -376,25 +422,43 @@ export function ListaComprasScreen() {
               </View>
 
               <View className="flex-1">
-                <Text className="text-slate-700 font-bold mb-2 text-center">Qtd.</Text>
-                <View className="flex-row items-center justify-between bg-slate-100 p-2 rounded-2xl">
-                  <TouchableOpacity 
-                    onPress={() => setQuantidadeDigitada(prev => Math.max(1, prev - 1))}
-                    className="bg-white p-2 rounded-xl shadow-sm"
-                  >
-                    <Minus color="#64748b" size={20} />
-                  </TouchableOpacity>
-                  <Text className="text-lg font-bold text-slate-800">{quantidadeDigitada}</Text>
-                  <TouchableOpacity 
-                    onPress={() => setQuantidadeDigitada(prev => prev + 1)}
-                    className="bg-white p-2 rounded-xl shadow-sm"
-                  >
-                    <Plus color="#16a34a" size={20} />
-                  </TouchableOpacity>
-                </View>
+                <Text className="text-slate-700 font-bold mb-2 text-center">{porPeso ? "Peso (kg)" : "Quantidade"}</Text>
+                {porPeso ? (
+                  <View className="flex-1">
+                  <TextInput
+                    placeholder="0,000"
+                    className="bg-slate-100 p-4 rounded-2xl text-center text-xl font-bold text-slate-800"
+                    value={pesoDigitado}
+                    onChangeText={mascararPeso}
+                    keyboardType="decimal-pad"
+                    returnKeyType="done"
+                    onSubmitEditing={confirmarPreco}
+                  />
+                    <Text className="text-slate-500 text-xs text-center mt-1">
+                      Digite em gramas (500 = 0,500 kg)
+                    </Text>
+                  </View>
+                ) : (
+                  <View className="flex-row items-center justify-between bg-slate-100 p-2 rounded-2xl">
+                    <TouchableOpacity
+                      onPress={() => setQuantidadeDigitada(prev => Math.max(1, prev - 1))}
+                      className="bg-white p-2 rounded-xl shadow-sm"
+                    >
+                      <Minus color="#64748b" size={20} />
+                    </TouchableOpacity>
+                    <Text className="text-lg font-bold text-slate-800">{quantidadeDigitada}</Text>
+                    <TouchableOpacity
+                      onPress={() => setQuantidadeDigitada(prev => prev + 1)}
+                      className="bg-white p-2 rounded-xl shadow-sm"
+                    >
+                      <Plus color="#16a34a" size={20} />
+                    </TouchableOpacity>
+                  </View>
+                )}
               </View>
             </View>
 
+            <Text className="text-slate-600 text-right font-semibold mb-2">Total estimado: R$ {valorEstimadoItem.toFixed(2)}</Text>
             <View className="flex-row gap-3 mt-4">
               <TouchableOpacity 
                 onPress={() => setModalVisivel(false)}

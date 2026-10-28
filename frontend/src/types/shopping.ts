@@ -4,6 +4,7 @@ export interface ItemPlanejado {
   quantidade: number;
   comprado: boolean;
   preco: number;
+  porPeso?: boolean;
 }
 
 export interface ListaAtiva {
@@ -19,6 +20,7 @@ export interface ListaItem {
   quantidade: number;
   preco: number;
   foiComprado: boolean; 
+  porPeso?: boolean;
 }
 
 export interface ComprasHistorico {
