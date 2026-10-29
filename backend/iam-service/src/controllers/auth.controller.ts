@@ -21,7 +21,7 @@ export class AutenticacaoControlador {
 
       if (usuarioJaExiste) {
         logger.alerta(`Cadastro recusado: O e-mail ${email} já está em uso.`);
-        return res.status(400).json({ error: 'Não foi possível concluir o cadastro. E-mail ou dados inválidos.' });
+        return res.status(400).json({ error: 'Não foi possível concluir o cadastro. E-mail ou senha inválida.' });
       }
 
       const senhaHash = await AutenticacaoServico.gerarHashSenha(senha);
