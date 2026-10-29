@@ -1,15 +1,15 @@
 version: '3.8'
-name: lista-inteligente
 
 services:
+  # ==================== BANCOS DE DADOS ====================
   postgres:
     image: postgres:16-alpine
-    container_name: postgres_dev
+    container_name: postgres_wms
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${DB_USER:-postgres}
       POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
-      POSTGRES_DB: ${DB_NAME:-app_db}
+      POSTGRES_DB: ${DB_NAME:-estoque_raiz}
     ports:
       - "5432:5432"
     volumes:
@@ -17,13 +17,38 @@ services:
 
   redis:
     image: redis:7-alpine
-    container_name: redis_dev
+    container_name: redis_wms
     restart: unless-stopped
     ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
+      - "${REDIS_PORT:-6379}:6379"
+
+  # ==================== MICROSSERVIÇOS ====================
+  iam-service:
+    build: ./iam-service
+    container_name: iam_service
+    restart: unless-stopped
+    ports:
+      - "${AUTH_SERVICE_PORT}:3001"
+    env_file:
+      - .env
+    environment:
+      - AUTH_SERVICE_PORT=3001
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/lista_inteligente_db?schema=public"
+      - JWT_SECRET=sua_chave_secreta_super_segura
+      - FORCE_COLOR=1                      # <-- Injeta TODAS as variáveis do .env da raiz para dentro deste serviço
+    depends_on:
+      - postgres
+      - redis
+
+  # catalog-service:
+  #   build: ./catalog-service
+  #   container_name: catalog_service
+  #   ports:
+  #     - "${PRODUTOS_SERVICE_PORT}:3002"
+  #   env_file:
+  #     - .env
+  #   depends_on:
+  #     - postgres
 
 volumes:
   postgres_data:
-  redis_data:
