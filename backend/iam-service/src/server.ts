@@ -11,12 +11,14 @@ import { manipuladorGlobalErros } from './middlewares/erro.middleware';
 dotenv.config();
 
 const app = express();
+app.set('trust proxy', true)
 const porta = process.env.AUTH_SERVICE_PORT || 3001;
 const portaGateway = process.env.GATEWAY_PORT || 3000;
 
 app.use(cors());
 app.use(express.json());
 app.use(limitadorGeral);
+
 
 // Middleware global para registrar todas as requisições HTTP no terminal do Docker
 app.use((req, res, next) => {
