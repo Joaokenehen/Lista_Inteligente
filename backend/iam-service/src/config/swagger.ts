@@ -2,10 +2,8 @@ import { Application } from 'express';
 import swaggerJsDoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
 
-const porta = process.env.AUTH_SERVICE_PORT || 3001;
-
 const opcoesSwagger: swaggerJsDoc.Options = {
-  swaggerDefinition: {
+  definition: {
     openapi: '3.0.0',
     info: {
       title: 'Lista Inteligente - Serviço IAM',
@@ -14,8 +12,12 @@ const opcoesSwagger: swaggerJsDoc.Options = {
     },
     servers: [
       {
-        url: `http://localhost:${porta}`,
-        description: 'Servidor Local (Docker Container)',
+        url: 'http://10.0.2.95:3000',
+        description: 'Servidor Fedora (Gateway Nginx - Porta 3000)',
+      },
+      {
+        url: 'http://localhost:3000',
+        description: 'Acesso Local (Gateway Nginx - Porta 3000)',
       },
     ],
     components: {
