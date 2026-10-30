@@ -1,6 +1,18 @@
 version: '3.8'
 
 services:
+  # ==================== API GATEWAY ====================
+  gateway:
+    image: nginx:alpine
+    container_name: api_gateway
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - iam-service
+
   # ==================== BANCOS DE DADOS ====================
   postgres:
     image: postgres:16-alpine
@@ -9,11 +21,16 @@ services:
     environment:
       POSTGRES_USER: ${DB_USER:-postgres}
       POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
-      POSTGRES_DB: ${DB_NAME:-estoque_raiz}
+      POSTGRES_DB: ${DB_NAME:-lista_inteligente_db}
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d lista_inteligente_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   redis:
     image: redis:7-alpine
@@ -27,28 +44,19 @@ services:
     build: ./iam-service
     container_name: iam_service
     restart: unless-stopped
-    ports:
-      - "${AUTH_SERVICE_PORT}:3001"
+    # Sem a seção 'ports' para bloquear acesso direto vindo de fora do Docker
     env_file:
       - .env
     environment:
       - AUTH_SERVICE_PORT=3001
-      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/lista_inteligente_db?schema=public"
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/lista_inteligente_db?schema=public
       - JWT_SECRET=sua_chave_secreta_super_segura
-      - FORCE_COLOR=1                      # <-- Injeta TODAS as variáveis do .env da raiz para dentro deste serviço
+      - FORCE_COLOR=1
     depends_on:
-      - postgres
-      - redis
-
-  # catalog-service:
-  #   build: ./catalog-service
-  #   container_name: catalog_service
-  #   ports:
-  #     - "${PRODUTOS_SERVICE_PORT}:3002"
-  #   env_file:
-  #     - .env
-  #   depends_on:
-  #     - postgres
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
 
 volumes:
   postgres_data:
