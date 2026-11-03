@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { View, Text, TouchableOpacity, Alert, KeyboardAvoidingView, Platform, ScrollView } from "react-native"
+import { View, Text, TouchableOpacity, Alert, Keyboard, KeyboardAvoidingView, Platform, ScrollView } from "react-native"
 import { useNavigation } from "@react-navigation/native"
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import { InputCard } from "../components/InputCard"
@@ -65,6 +65,11 @@ export function PerfilScreen() {
                     value={nome}
                     onChangeText={setNome}
                     maxLength={20}
+                    returnKeyType="done"
+                    onSubmitEditing={() => {
+                        Keyboard.dismiss()
+                        void handleSalvar()
+                    }}
                 />
 
                 <TouchableOpacity 

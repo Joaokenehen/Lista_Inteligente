@@ -20,8 +20,17 @@ export function SelecionarPerfilScreen() {
   );
 
   async function carregarPerfils() {
-    const data = await AsyncStorage.getItem('@Lista-inteligente:perfis');
-    if (data) setPerfis(JSON.parse(data));
+    try {
+      const data = await AsyncStorage.getItem('@Lista-inteligente:perfis');
+      const perfisSalvos: string[] = data ? JSON.parse(data) : [];
+      setPerfis(perfisSalvos);
+
+      if (perfisSalvos.length === 0) {
+        navigation.replace('PerfilScreen');
+      }
+    } catch (error) {
+      Alert.alert('Erro', 'Não foi possível carregar os perfis salvos.');
+    }
   }
 
   const handleSelect = async (nome: string) => {

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { AppNavigationProp } from '../types/navigation';
 import { History, PlusCircle, ArrowRight, Users, Info, ShoppingCart } from 'lucide-react-native';
@@ -9,15 +9,20 @@ export function HomeScreen() {
   const navigation = useNavigation<AppNavigationProp>();
   const [nomeUsuario, setNomeUsuario] = useState("Usuário");
   const [listasAtivas, setListasAtivas] = useState<any[]>([]);
+  const [perfilVerificado, setPerfilVerificado] = useState(false);
 
   useFocusEffect(
     React.useCallback(() => {
       async function carregarDados() {
+        setPerfilVerificado(false);
         try {
           const nomeSalvo = await AsyncStorage.getItem("@Lista-inteligente:perfilAtual");
-          if (nomeSalvo) {
-            setNomeUsuario(nomeSalvo);
+          if (!nomeSalvo?.trim()) {
+            navigation.replace('PerfilScreen');
+            return;
           }
+
+          setNomeUsuario(nomeSalvo);
 
           // ✨ NOVO: Busca as listas criadas no AsyncStorage
           const listasSalvas = await AsyncStorage.getItem("@Lista-inteligente:listasAtivas");
@@ -38,14 +43,20 @@ export function HomeScreen() {
           } else {
             setListasAtivas([]);
           }
+          setPerfilVerificado(true);
         } catch (error) {
           console.error("Erro ao carregar dados:", error);
+          Alert.alert("Erro", "Não foi possível carregar o perfil. Tente novamente.");
         }
       }
       
       carregarDados();
     }, [])
   );
+
+  if (!perfilVerificado) {
+    return null;
+  }
 
   return (
     <View className="flex-1 bg-slate-50">
