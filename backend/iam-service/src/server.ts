@@ -11,7 +11,7 @@ import { manipuladorGlobalErros } from './middlewares/erro.middleware';
 dotenv.config();
 
 const app = express();
-app.set('trust proxy', true)
+app.set('trust proxy', 1)
 const porta = process.env.AUTH_SERVICE_PORT || 3001;
 const portaGateway = process.env.GATEWAY_PORT || 3000;
 
@@ -42,12 +42,13 @@ app.use(manipuladorGlobalErros);
 
 sequelize.sync()
   .then(() => {
-    logger.sucesso('PostgreSQL sincronizado com sucesso via Sequelize!');
+    logger.sucesso('MySQL sincronizado com sucesso via Sequelize!');
     app.listen(porta, () => {
       logger.sucesso(`Servidor rodando na porta ${porta}`);
-      logger.info(`Documentação Swagger ativa em: http://localhost:${portaGateway}/api-docs`);
+      logger.info(`Documentação Swagger ativa em: http://localhost:${portaGateway}/api-docs/`);
     });
   })
   .catch((error) => {
-    logger.error('Erro ao conectar e sincronizar com o PostgreSQL:', error);
+    logger.error('Erro ao conectar e sincronizar com o MySQL:', error);
   });
+

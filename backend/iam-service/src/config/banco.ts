@@ -1,8 +1,14 @@
 import { Sequelize } from 'sequelize';
 
-const databaseUrl = process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/lista_inteligente_db';
+export const sequelize = new Sequelize(
+  process.env.DB_NAME || 'lista_inteligente',
+  process.env.DB_USER || 'usuario_db',
+  process.env.DB_PASSWORD || 'senha_db',
+  {
+    host: process.env.DB_HOST || 'localhost', // Em ambiente Docker, use o nome do container (ex: 'db')
+    port: Number(process.env.DB_PORT) || 3306,
+    dialect: 'mysql', // Mudança crucial aqui
+    logging: false,
+  }
+);
 
-export const sequelize = new Sequelize(databaseUrl, {
-  dialect: 'postgres',
-  logging: false, // Desativa logs de SQL no terminal para manter a saída limpa
-});

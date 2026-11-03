@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # ==================== API GATEWAY ====================
   gateway:
@@ -14,21 +12,22 @@ services:
       - iam-service
 
   # ==================== BANCOS DE DADOS ====================
-  postgres:
-    image: postgres:16-alpine
-    container_name: postgres_wms
+  mysql:
+    image: mysql:8.0
+    container_name: mysql_lista
     restart: unless-stopped
     environment:
-      POSTGRES_USER: ${DB_USER:-postgres}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
-      POSTGRES_DB: ${DB_NAME:-lista_inteligente_db}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root_admin} # Obrigatório no container MySQL
+      MYSQL_USER: ${DB_USER:-mysqluser}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-mysqlpass}
+      MYSQL_DATABASE: ${DB_NAME:-lista_inteligente_db}
     ports:
-      - "5432:5432"
+      - "3306:3306"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - mysql_data:/var/lib/mysql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d lista_inteligente_db"]
-      interval: 5s
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
       timeout: 5s
       retries: 5
 
@@ -44,19 +43,18 @@ services:
     build: ./iam-service
     container_name: iam_service
     restart: unless-stopped
-    # Sem a seção 'ports' para bloquear acesso direto vindo de fora do Docker
     env_file:
       - .env
     environment:
       - AUTH_SERVICE_PORT=3001
-      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/lista_inteligente_db?schema=public
+      - DATABASE_URL=mysql://${DB_USER:-mysqluser}:${DB_PASSWORD:-mysqlpass}@mysql:3306/${DB_NAME:-lista_inteligente_db}
       - JWT_SECRET=sua_chave_secreta_super_segura
       - FORCE_COLOR=1
     depends_on:
-      postgres:
+      mysql:
         condition: service_healthy
       redis:
         condition: service_started
 
 volumes:
-  postgres_data:
+  mysql_data:
