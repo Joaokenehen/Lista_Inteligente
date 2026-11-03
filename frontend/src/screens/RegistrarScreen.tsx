@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Keyboard, View, Text, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView, type ScrollViewInstance } from 'react-native';
+import { Keyboard, View, Text, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView, type ScrollViewInstance, type TextInputInstance } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
@@ -20,6 +20,9 @@ export function RegistrarScreen() {
   const [alturaTeclado, setAlturaTeclado] = useState(0);
   const scrollViewRef = useRef<ScrollViewInstance | null>(null);
   const campoFocadoRef = useRef<string | null>(null);
+  const emailInputRef = useRef<TextInputInstance | null>(null);
+  const senhaInputRef = useRef<TextInputInstance | null>(null);
+  const confirmarSenhaInputRef = useRef<TextInputInstance | null>(null);
 
   useEffect(() => {
     const mostrarSubscription = Keyboard.addListener('keyboardDidShow', ({ endCoordinates }) => {
@@ -98,12 +101,16 @@ export function RegistrarScreen() {
               value={nome}
               onChangeText={setNome}
               onFocus={() => focarCampo('nome')}
+              returnKeyType="next"
+              submitBehavior="submit"
+              onSubmitEditing={() => emailInputRef.current?.focus()}
             />
           </View>
 
           <View className="mb-4">
             <Text className="mb-2 text-left font-semibold text-green-900">E-mail</Text>
             <TextInput
+              ref={emailInputRef}
               className="w-full rounded-xl border border-green-200 bg-white px-4 py-3 text-left text-green-950"
               placeholder="E-mail"
               placeholderTextColor="#86a98d"
@@ -112,12 +119,16 @@ export function RegistrarScreen() {
               value={email}
               onChangeText={setEmail}
               onFocus={() => focarCampo('email')}
+              returnKeyType="next"
+              submitBehavior="submit"
+              onSubmitEditing={() => senhaInputRef.current?.focus()}
             />
           </View>
 
           <View className="mb-4">
             <Text className="mb-2 text-left font-semibold text-green-900">Senha</Text>
             <TextInput
+              ref={senhaInputRef}
               className="w-full rounded-xl border border-green-200 bg-white px-4 py-3 text-left text-green-950"
               placeholder="Senha"
               placeholderTextColor="#86a98d"
@@ -125,12 +136,16 @@ export function RegistrarScreen() {
               value={senha}
               onChangeText={setSenha}
               onFocus={() => focarCampo('senha')}
+              returnKeyType="next"
+              submitBehavior="submit"
+              onSubmitEditing={() => confirmarSenhaInputRef.current?.focus()}
             />
           </View>
 
           <View className="mb-2">
             <Text className="mb-2 text-left font-semibold text-green-900">Confirmar Senha</Text>
             <TextInput
+              ref={confirmarSenhaInputRef}
               className="w-full rounded-xl border border-green-200 bg-white px-4 py-3 text-left text-green-950"
               placeholder="Confirme a senha"
               placeholderTextColor="#86a98d"
@@ -138,6 +153,12 @@ export function RegistrarScreen() {
               value={confirmarSenha}
               onChangeText={setConfirmarSenha}
               onFocus={() => focarCampo('confirmarSenha')}
+              returnKeyType="done"
+              submitBehavior="blurAndSubmit"
+              onSubmitEditing={() => {
+                Keyboard.dismiss();
+                handleRegistrar();
+              }}
             />
           </View>
 

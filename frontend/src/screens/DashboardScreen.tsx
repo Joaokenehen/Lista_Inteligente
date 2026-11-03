@@ -8,6 +8,7 @@ type AuthStackParamList = {
   Dashboard: undefined;
   Login: undefined;
   Registrar: undefined;
+  App: undefined;
 };
 
 type NavigationProps = NativeStackNavigationProp<AuthStackParamList>;
@@ -46,6 +47,16 @@ export function DashboardScreen() {
           <Text className="text-lg font-bold text-green-800">Criar Nova Conta</Text>
         </TouchableOpacity>
       </View>
+
+      <TouchableOpacity
+        className="mt-6 px-4 py-2"
+        onPress={() => navigation.navigate('App')}
+        activeOpacity={0.75}
+      >
+        <Text className="text-center font-semibold text-green-800">
+          Iniciar sessão sem login
+        </Text>
+      </TouchableOpacity>
     </View>
   );
 }

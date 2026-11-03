@@ -13,7 +13,7 @@ const Stack = createNativeStackNavigator();
 export function AppNavigator() {
   return (
     <Stack.Navigator 
-      initialRouteName="HomeScreen"
+      initialRouteName="SelecionarPerfilScreen"
       screenOptions={{ 
         headerShown: false,
         contentStyle: { backgroundColor: '#F8FAFC' } 
