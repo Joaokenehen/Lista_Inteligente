@@ -1,7 +1,20 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Keyboard, View, Text, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView, type ScrollViewInstance, type TextInputInstance } from 'react-native';
+import {
+  Keyboard,
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  ActivityIndicator,
+  type ScrollViewInstance,
+  type TextInputInstance,
+} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { API_BASE_URL, MENSAGEM_ERRO_CONEXAO } from '../services/apiConfig';
 
 type AuthStackParamList = {
   Dashboard: undefined;
@@ -11,18 +24,31 @@ type AuthStackParamList = {
 
 type NavigationProps = NativeStackNavigationProp<AuthStackParamList>;
 
+const LIMITE_NOME = 100;
+const LIMITE_EMAIL = 254;
+const LIMITE_SENHA = 128;
+
 export function RegistrarScreen() {
   const navigation = useNavigation<NavigationProps>();
+
   const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [confirmarSenha, setConfirmarSenha] = useState('');
+  const [mensagemErro, setMensagemErro] = useState<string | null>(null);
+  const [carregando, setCarregando] = useState(false);
   const [alturaTeclado, setAlturaTeclado] = useState(0);
   const scrollViewRef = useRef<ScrollViewInstance | null>(null);
   const campoFocadoRef = useRef<string | null>(null);
   const emailInputRef = useRef<TextInputInstance | null>(null);
   const senhaInputRef = useRef<TextInputInstance | null>(null);
   const confirmarSenhaInputRef = useRef<TextInputInstance | null>(null);
+
+  const requisitosSenha = [
+    { texto: 'Pelo menos 8 caracteres', atende: senha.length >= 8 },
+    { texto: 'Pelo menos uma letra maiúscula', atende: /[A-Z]/.test(senha) },
+    { texto: 'Pelo menos um caractere especial', atende: /[^A-Za-z0-9\s]/.test(senha) },
+  ];
 
   useEffect(() => {
     const mostrarSubscription = Keyboard.addListener('keyboardDidShow', ({ endCoordinates }) => {
@@ -39,7 +65,7 @@ export function RegistrarScreen() {
   }, []);
 
   useEffect(() => {
-    if (alturaTeclado === 0 || campoFocadoRef.current !== 'confirmarSenha') return;
+    if (alturaTeclado === 0 || !campoFocadoRef.current) return;
 
     const timeout = setTimeout(() => {
       scrollViewRef.current?.scrollToEnd({ animated: true });
@@ -51,18 +77,74 @@ export function RegistrarScreen() {
   const focarCampo = (campo: string) => {
     campoFocadoRef.current = campo;
 
-    if (campo === 'confirmarSenha') {
-      setTimeout(() => {
-        scrollViewRef.current?.scrollToEnd({ animated: true });
-      }, 300);
-    }
+    setTimeout(() => {
+      scrollViewRef.current?.scrollToEnd({ animated: true });
+    }, 300);
   };
 
-  const handleRegistrar = () => {
-    // Validação simples antes de enviar para o backend
-    if (senha !== confirmarSenha) {
-      alert("As senhas não coincidem!");
+  const handleRegistrar = async () => {
+    setMensagemErro(null);
+
+    // 1. Validações locais (client-side)
+    if (!nome.trim() || !email.trim() || !senha || !confirmarSenha) {
+      setMensagemErro('Preencha todos os campos para continuar.');
       return;
+    }
+
+    if (nome.trim().length > LIMITE_NOME) {
+      setMensagemErro(`O nome deve ter no máximo ${LIMITE_NOME} caracteres.`);
+      return;
+    }
+
+    if (email.trim().length > LIMITE_EMAIL || !/^[^\s@]+@[^\s@]+\.com$/i.test(email.trim())) {
+      setMensagemErro('Informe um e-mail válido terminado em .com.');
+      return;
+    }
+
+    if (requisitosSenha.some((requisito) => !requisito.atende)) {
+      setMensagemErro('A senha ainda não atende a todos os requisitos.');
+      return;
+    }
+
+    if (senha !== confirmarSenha) {
+      setMensagemErro('As senhas não coincidem.');
+      return;
+    }
+
+    setCarregando(true);
+
+    try {
+      let response: Response;
+      try {
+        response = await fetch(`${API_BASE_URL}/auth/cadastrar`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            nome: nome.trim(),
+            email: email.trim().toLowerCase(),
+            senha,
+          }),
+        });
+      } catch (error) {
+        console.error('Falha ao conectar à API de cadastro:', error);
+        throw new Error(MENSAGEM_ERRO_CONEXAO);
+      }
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Ocorreu um erro ao realizar o cadastro.');
+      }
+
+      navigation.navigate('Login');
+    } catch (error) {
+      setMensagemErro(
+        error instanceof Error ? error.message : 'Erro ao realizar cadastro.'
+      );
+    } finally {
+      setCarregando(false);
     }
   };
 
@@ -82,7 +164,7 @@ export function RegistrarScreen() {
         }}
         keyboardShouldPersistTaps="handled"
       >
-        <View className="mb-10 items-start">
+        <View className="mb-8 items-start">
           <Text className="text-left text-4xl font-extrabold text-green-900">
             Nova Conta
           </Text>
@@ -90,6 +172,15 @@ export function RegistrarScreen() {
             Preencha os dados para criar o seu perfil.
           </Text>
         </View>
+
+        {/* Banner de Erro Responsivo */}
+        {mensagemErro && (
+          <View className="mb-4 rounded-xl border border-red-300 bg-red-100 p-3">
+            <Text className="text-center font-medium text-red-700">
+              {mensagemErro}
+            </Text>
+          </View>
+        )}
 
         <View>
           <View className="mb-4">
@@ -99,6 +190,7 @@ export function RegistrarScreen() {
               placeholder="Nome completo"
               placeholderTextColor="#86a98d"
               value={nome}
+              maxLength={LIMITE_NOME}
               onChangeText={setNome}
               onFocus={() => focarCampo('nome')}
               returnKeyType="next"
@@ -117,6 +209,7 @@ export function RegistrarScreen() {
               keyboardType="email-address"
               autoCapitalize="none"
               value={email}
+              maxLength={LIMITE_EMAIL}
               onChangeText={setEmail}
               onFocus={() => focarCampo('email')}
               returnKeyType="next"
@@ -134,12 +227,23 @@ export function RegistrarScreen() {
               placeholderTextColor="#86a98d"
               secureTextEntry
               value={senha}
+              maxLength={LIMITE_SENHA}
               onChangeText={setSenha}
               onFocus={() => focarCampo('senha')}
               returnKeyType="next"
               submitBehavior="submit"
               onSubmitEditing={() => confirmarSenhaInputRef.current?.focus()}
             />
+            <View className="mt-2">
+              {requisitosSenha.map((requisito) => (
+                <Text
+                  key={requisito.texto}
+                  className={`text-sm ${requisito.atende ? 'text-green-700' : 'text-red-600'}`}
+                >
+                  {requisito.atende ? '✓' : '•'} {requisito.texto}
+                </Text>
+              ))}
+            </View>
           </View>
 
           <View className="mb-2">
@@ -151,6 +255,7 @@ export function RegistrarScreen() {
               placeholderTextColor="#86a98d"
               secureTextEntry
               value={confirmarSenha}
+              maxLength={LIMITE_SENHA}
               onChangeText={setConfirmarSenha}
               onFocus={() => focarCampo('confirmarSenha')}
               returnKeyType="done"
@@ -163,16 +268,24 @@ export function RegistrarScreen() {
           </View>
 
           <TouchableOpacity 
-            className="mt-6 w-full items-center rounded-xl bg-green-700 py-4 shadow-sm"
+            className={`mt-6 w-full flex-row items-center justify-center rounded-xl py-4 shadow-sm ${
+              carregando ? 'bg-green-600' : 'bg-green-700'
+            }`}
             onPress={handleRegistrar}
+            disabled={carregando}
             activeOpacity={0.85}
           >
-            <Text className="text-lg font-bold text-white">Cadastrar</Text>
+            {carregando ? (
+              <ActivityIndicator color="#ffffff" className="mr-2" />
+            ) : null}
+            <Text className="text-lg font-bold text-white">
+              {carregando ? 'Cadastrando...' : 'Cadastrar'}
+            </Text>
           </TouchableOpacity>
         </View>
 
         {/* Link para voltar ao Login */}
-        <View className="mt-8 mb-6 flex-row">
+        <View className="mt-8 mb-6 flex-row justify-center">
           <Text className="text-green-900">Já tem uma conta? </Text>
           <TouchableOpacity onPress={() => navigation.navigate('Login')}>
             <Text className="font-bold text-green-700">Fazer login</Text>

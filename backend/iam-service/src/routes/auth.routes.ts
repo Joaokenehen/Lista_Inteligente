@@ -21,18 +21,26 @@ const roteador = Router();
  *             properties:
  *               nome:
  *                 type: string
+ *                 maxLength: 100
  *                 example: João Gustavo
  *               email:
  *                 type: string
+ *                 maxLength: 254
+ *                 pattern: '^[^\s@]+@[^\s@]+\.com$'
  *                 example: joao@listainteligente.com
  *               senha:
  *                 type: string
- *                 example: "123456"
+ *                 minLength: 8
+ *                 maxLength: 128
+ *                 description: Deve conter uma letra maiúscula e um caractere especial.
+ *                 example: "Senha@123"
  *     responses:
  *       201:
  *         description: Usuário cadastrado com sucesso
  *       400:
- *         description: Dados inválidos ou e-mail já cadastrado
+ *         description: Dados inválidos ou senha fora dos requisitos
+ *       409:
+ *         description: E-mail já cadastrado
  *       429:
  *         description: Muitas tentativas de requisição
  */

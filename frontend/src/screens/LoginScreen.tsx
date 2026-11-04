@@ -1,7 +1,21 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Keyboard, View, Text, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView, type ScrollViewInstance, type TextInputInstance } from 'react-native';
+import {
+  Keyboard,
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  ActivityIndicator,
+  type ScrollViewInstance,
+  type TextInputInstance,
+} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { saveAuthToken } from '../services/authStorage';
+import { API_BASE_URL, MENSAGEM_ERRO_CONEXAO } from '../services/apiConfig';
 
 type AuthStackParamList = {
   Dashboard: undefined;
@@ -10,11 +24,23 @@ type AuthStackParamList = {
 };
 
 type NavigationProps = NativeStackNavigationProp<AuthStackParamList>;
+type LoginScreenProps = {
+  onAuthenticated: () => void;
+};
 
-export function LoginScreen() {
+const LIMITE_EMAIL = 254;
+const LIMITE_SENHA = 128;
+
+export function LoginScreen({ onAuthenticated }: LoginScreenProps) {
   const navigation = useNavigation<NavigationProps>();
+
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
+
+  // Estados de feedback visual
+  const [mensagemErro, setMensagemErro] = useState<string | null>(null);
+  const [carregando, setCarregando] = useState(false);
+
   const [alturaTeclado, setAlturaTeclado] = useState(0);
   const scrollViewRef = useRef<ScrollViewInstance | null>(null);
   const campoFocadoRef = useRef<string | null>(null);
@@ -54,8 +80,59 @@ export function LoginScreen() {
     }
   };
 
-  const handleLogin = () => {
-    // Aqui faremos a integração com a API do Fedora posteriormente
+  const handleLogin = async () => {
+    setMensagemErro(null);
+
+    // Validação básica client-side
+    if (!email.trim() || !senha) {
+      setMensagemErro('Informe o e-mail e a senha para acessar.');
+      return;
+    }
+
+    setCarregando(true);
+
+    try {
+      let response: Response;
+      try {
+        response = await fetch(`${API_BASE_URL}/auth/login`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email: email.trim().toLowerCase(),
+            senha,
+          }),
+        });
+      } catch (error) {
+        console.error('Falha ao conectar à API de autenticação:', error);
+        throw new Error(MENSAGEM_ERRO_CONEXAO);
+      }
+
+      const data: unknown = await response.json();
+
+      const resposta = typeof data === 'object' && data !== null
+        ? data as { error?: unknown; token?: unknown }
+        : {};
+      if (!response.ok) {
+        throw new Error(
+          typeof resposta.error === 'string' ? resposta.error : 'Erro ao realizar login.'
+        );
+      }
+
+      if (typeof resposta.token !== 'string' || !resposta.token) {
+        throw new Error('O servidor não retornou um token de acesso válido.');
+      }
+
+      await saveAuthToken(resposta.token);
+      onAuthenticated();
+    } catch (error) {
+      setMensagemErro(
+        error instanceof Error ? error.message : 'Erro ao realizar login.'
+      );
+    } finally {
+      setCarregando(false);
+    }
   };
 
   return (
@@ -73,14 +150,23 @@ export function LoginScreen() {
         }}
         keyboardShouldPersistTaps="handled"
       >
-        <View className="mb-10 items-start">
+        <View className="mb-8 items-start">
           <Text className="text-left text-4xl font-extrabold text-green-900">
             Bem-vindo(a)!
           </Text>
           <Text className="mt-2 text-left text-base text-green-800">
-            Faça login para aceder às suas listas no CARTFLOW.
+            Entre para sincronizar seus dados e acessar recursos exclusivos.
           </Text>
         </View>
+
+        {/* Banner de Erro Responsivo */}
+        {mensagemErro && (
+          <View className="mb-4 rounded-xl border border-red-300 bg-red-100 p-3">
+            <Text className="text-center font-medium text-red-700">
+              {mensagemErro}
+            </Text>
+          </View>
+        )}
 
         <View>
           {/* Input E-mail */}
@@ -93,6 +179,7 @@ export function LoginScreen() {
               keyboardType="email-address"
               autoCapitalize="none"
               value={email}
+              maxLength={LIMITE_EMAIL}
               onChangeText={setEmail}
               onFocus={() => focarCampo('email')}
               returnKeyType="next"
@@ -111,6 +198,7 @@ export function LoginScreen() {
               placeholderTextColor="#86a98d"
               secureTextEntry
               value={senha}
+              maxLength={LIMITE_SENHA}
               onChangeText={setSenha}
               onFocus={() => focarCampo('senha')}
               returnKeyType="done"
@@ -124,16 +212,24 @@ export function LoginScreen() {
 
           {/* Botão Entrar */}
           <TouchableOpacity 
-            className="mt-6 w-full items-center rounded-xl bg-green-700 py-4 shadow-sm"
+            className={`mt-6 w-full flex-row items-center justify-center rounded-xl py-4 shadow-sm ${
+              carregando ? 'bg-green-600' : 'bg-green-700'
+            }`}
             onPress={handleLogin}
+            disabled={carregando}
             activeOpacity={0.85}
           >
-            <Text className="text-lg font-bold text-white">Entrar</Text>
+            {carregando ? (
+              <ActivityIndicator color="#ffffff" className="mr-2" />
+            ) : null}
+            <Text className="text-lg font-bold text-white">
+              {carregando ? 'Entrando...' : 'Entrar'}
+            </Text>
           </TouchableOpacity>
         </View>
 
-        {/* Link para a tela de Registo */}
-        <View className="mt-8 flex-row">
+        {/* Link para a tela de Registro */}
+        <View className="mt-8 flex-row justify-center">
           <Text className="text-green-900">Não tem conta? </Text>
           <TouchableOpacity onPress={() => navigation.navigate('Registrar')}>
             <Text className="font-bold text-green-700">Criar agora</Text>

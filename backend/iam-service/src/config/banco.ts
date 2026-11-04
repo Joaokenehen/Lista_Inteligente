@@ -5,9 +5,9 @@ export const sequelize = new Sequelize(
   process.env.DB_USER || 'usuario_db',
   process.env.DB_PASSWORD || 'senha_db',
   {
-    host: process.env.DB_HOST || 'localhost', // Em ambiente Docker, use o nome do container (ex: 'db')
+    host: process.env.DB_HOST || 'localhost',
     port: Number(process.env.DB_PORT) || 3306,
-    dialect: 'mysql', // Mudança crucial aqui
+    dialect: 'mysql',
     logging: false,
   }
 );
