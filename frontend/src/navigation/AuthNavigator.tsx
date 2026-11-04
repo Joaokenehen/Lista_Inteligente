@@ -13,15 +13,19 @@ type AuthStackParamList = {
 };
 
 type AuthNavigatorProps = {
+  sessaoExpirada?: boolean;
   onAuthenticated: () => void;
 };
 
 const Stack = createNativeStackNavigator<AuthStackParamList>();
 
-export function AuthNavigator({ onAuthenticated }: AuthNavigatorProps) {
+export function AuthNavigator({
+  sessaoExpirada = false,
+  onAuthenticated,
+}: AuthNavigatorProps) {
   return (
     <Stack.Navigator 
-      initialRouteName="Dashboard"
+      initialRouteName={sessaoExpirada ? 'Login' : 'Dashboard'}
       screenOptions={{ 
         headerShown: false,
         contentStyle: { backgroundColor: '#F8FAFC' } 
@@ -29,7 +33,15 @@ export function AuthNavigator({ onAuthenticated }: AuthNavigatorProps) {
     >
       <Stack.Screen name="Dashboard" component={DashboardScreen} />
       <Stack.Screen name="Login">
-        {(props) => <LoginScreen {...props} onAuthenticated={onAuthenticated} />}
+        {(props) => (
+          <LoginScreen
+            {...props}
+            onAuthenticated={onAuthenticated}
+            mensagemInicial={
+              sessaoExpirada ? 'Sua sessão expirou. Faça login novamente.' : undefined
+            }
+          />
+        )}
       </Stack.Screen>
       <Stack.Screen name="Registrar" component={RegistrarScreen} />
       <Stack.Screen name="App">

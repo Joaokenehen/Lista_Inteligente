@@ -27,12 +27,13 @@ type AuthStackParamList = {
 type NavigationProps = NativeStackNavigationProp<AuthStackParamList>;
 type LoginScreenProps = {
   onAuthenticated: () => void;
+  mensagemInicial?: string;
 };
 
 const LIMITE_EMAIL = 254;
 const LIMITE_SENHA = 128;
 
-export function LoginScreen({ onAuthenticated }: LoginScreenProps) {
+export function LoginScreen({ onAuthenticated, mensagemInicial }: LoginScreenProps) {
   const navigation = useNavigation<NavigationProps>();
 
   const [email, setEmail] = useState('');
@@ -40,7 +41,7 @@ export function LoginScreen({ onAuthenticated }: LoginScreenProps) {
   const [mostrarSenha, setMostrarSenha] = useState(false);
 
   // Estados de feedback visual
-  const [mensagemErro, setMensagemErro] = useState<string | null>(null);
+  const [mensagemErro, setMensagemErro] = useState<string | null>(mensagemInicial ?? null);
   const [carregando, setCarregando] = useState(false);
 
   const [alturaTeclado, setAlturaTeclado] = useState(0);
