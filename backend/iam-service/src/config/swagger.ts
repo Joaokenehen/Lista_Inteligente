@@ -38,8 +38,24 @@ const opcoesSwagger: swaggerJsDoc.Options = {
   apis: ['./src/routes/*.ts'],
 };
 
-const documentacaoSwagger = swaggerJsDoc(opcoesSwagger);
+export const swaggerSpec = swaggerJsDoc(opcoesSwagger);
 
 export const configurarSwagger = (app: Application) => {
-  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(documentacaoSwagger));
+  app.get('/auth/openapi.json', (_req, res) => {
+    res.json(swaggerSpec);
+  });
+
+  app.use(
+    '/api-docs',
+    swaggerUi.serve,
+    swaggerUi.setup(undefined, {
+      explorer: true,
+      swaggerOptions: {
+        urls: [
+          { url: '/auth/openapi.json', name: 'IAM & Autenticação' },
+          { url: '/listas/openapi.json', name: 'Serviço de Listas' },
+        ],
+      },
+    })
+  );
 };
