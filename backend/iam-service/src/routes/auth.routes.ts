@@ -21,18 +21,26 @@ const roteador = Router();
  *             properties:
  *               nome:
  *                 type: string
+ *                 maxLength: 100
  *                 example: João Gustavo
  *               email:
  *                 type: string
+ *                 maxLength: 254
+ *                 pattern: '^[^\s@]+@[^\s@]+\.com$'
  *                 example: joao@listainteligente.com
  *               senha:
  *                 type: string
- *                 example: "123456"
+ *                 minLength: 8
+ *                 maxLength: 128
+ *                 description: Deve conter uma letra maiúscula e um caractere especial.
+ *                 example: "Senha@123"
  *     responses:
  *       201:
  *         description: Usuário cadastrado com sucesso
  *       400:
- *         description: Dados inválidos ou e-mail já cadastrado
+ *         description: Dados inválidos ou senha fora dos requisitos
+ *       409:
+ *         description: E-mail já cadastrado
  *       429:
  *         description: Muitas tentativas de requisição
  */
@@ -67,6 +75,22 @@ roteador.post('/cadastrar', limitadorAutenticacao, AutenticacaoControlador.cadas
  *         description: Muitas tentativas de login
  */
 roteador.post('/login', limitadorAutenticacao, AutenticacaoControlador.realizarLogin);
+
+/**
+ * @swagger
+ * /auth/logout:
+ *   post:
+ *     summary: Registra o encerramento da sessão autenticada no cliente
+ *     tags: [Autenticação]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Logout registrado
+ *       401:
+ *         description: Token ausente, inválido ou expirado
+ */
+roteador.post('/logout', verificarAutenticacao, AutenticacaoControlador.encerrarSessao);
 
 /**
  * @swagger

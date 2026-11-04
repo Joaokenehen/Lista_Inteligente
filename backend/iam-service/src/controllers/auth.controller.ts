@@ -1,39 +1,84 @@
 import { Request, Response } from 'express';
 import { AutenticacaoServico, DadosUsuarioToken } from '../services/auth.service';
 import { UsuarioModel } from '../models/usuario.model';
+import { RequisicaoAutenticada } from '../middlewares/auth.middleware';
 import { logger } from '../utils/logger';
 
 export class AutenticacaoControlador {
+
+  // POST /auth/logout
+  static async encerrarSessao(req: RequisicaoAutenticada, res: Response) {
+    const usuario = req.usuario;
+
+    if (!usuario) {
+      logger.alerta('Tentativa de logout sem usuário autenticado.');
+      return res.status(401).json({ error: 'Sessão não autenticada.' });
+    }
+
+    logger.sucesso(
+      `Logout solicitado para usuário ID ${usuario.id}; o cliente descartará o JWT, que permanece válido até expirar.`
+    );
+
+    return res.status(200).json({ mensagem: 'Logout registrado com sucesso.' });
+  }
   
   // POST /auth/cadastrar
   static async cadastrarUsuario(req: Request, res: Response) {
     try {
-      const { nome, email, senha } = req.body;
+      const { nome, email, senha } = req.body ?? {};
 
-      if (!nome || !email || !senha) {
+      if (
+        typeof nome !== 'string' ||
+        typeof email !== 'string' ||
+        typeof senha !== 'string' ||
+        !nome.trim() ||
+        !email.trim() ||
+        !senha
+      ) {
         logger.alerta('Tentativa de cadastro com campos obrigatórios ausentes.');
         return res.status(400).json({ error: 'Os campos nome, email e senha são obrigatórios.' });
       }
 
-      logger.info(`Processando cadastro para o e-mail: ${email}`);
+      const nomeNormalizado = nome.trim();
+      const emailNormalizado = email.trim().toLowerCase();
+      const senhaValida =
+        senha.length >= 8 &&
+        /[A-Z]/.test(senha) &&
+        /[^A-Za-z0-9\s]/.test(senha);
 
-      const usuarioJaExiste = await UsuarioModel.findOne({ where: { email } });
+      if (nomeNormalizado.length > 100) {
+        return res.status(400).json({ error: 'O nome deve ter no máximo 100 caracteres.' });
+      }
+
+      if (emailNormalizado.length > 254 || !/^[^\s@]+@[^\s@]+\.com$/i.test(emailNormalizado)) {
+        return res.status(400).json({ error: 'Informe um e-mail válido terminado em .com.' });
+      }
+
+      if (!senhaValida || senha.length > 128) {
+        return res.status(400).json({
+          error: 'A senha deve ter entre 8 e 128 caracteres, uma letra maiúscula e um caractere especial.',
+        });
+      }
+
+      logger.info(`Processando cadastro para o e-mail: ${emailNormalizado}`);
+
+      const usuarioJaExiste = await UsuarioModel.findOne({ where: { email: emailNormalizado } });
 
       if (usuarioJaExiste) {
-        logger.alerta(`Cadastro recusado: O e-mail ${email} já está em uso.`);
-        return res.status(400).json({ error: 'Não foi possível concluir o cadastro. E-mail ou senha inválida.' });
+        logger.alerta(`Cadastro recusado: O e-mail ${emailNormalizado} já está em uso.`);
+        return res.status(409).json({ error: 'Este e-mail já está em uso por outra conta.' });
       }
 
       const senhaHash = await AutenticacaoServico.gerarHashSenha(senha);
 
       const novoUsuario = await UsuarioModel.create({
-        nome,
-        email,
+        nome: nomeNormalizado,
+        email: emailNormalizado,
         senhaHash,
         perfil: 'USUARIO',
       });
 
-      logger.sucesso(`Usuário ${email} (ID: ${novoUsuario.id}) cadastrado com sucesso!`);
+      logger.sucesso(`Usuário ${emailNormalizado} (ID: ${novoUsuario.id}) cadastrado com sucesso!`);
 
       return res.status(201).json({
         mensagem: 'Usuário cadastrado com sucesso!',

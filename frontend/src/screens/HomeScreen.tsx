@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { AppNavigationProp } from '../types/navigation';
-import { History, PlusCircle, ArrowRight, Users, Info, ShoppingCart } from 'lucide-react-native';
+import { History, PlusCircle, ArrowRight, Users, Info, ShoppingCart, Settings } from 'lucide-react-native';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export function HomeScreen() {
@@ -67,12 +67,24 @@ export function HomeScreen() {
             <Text className="text-white text-4xl font-bold mt-1">Olá, {nomeUsuario}! 👋</Text>
             <Text className="text-green-50 mt-2 opacity-80">Pronto para economizar hoje?</Text>
           </View>
-          <TouchableOpacity 
-            onPress={() => navigation.navigate('SobreScreen')}
-            className="bg-green-500 p-3 rounded-full shadow-sm mt-2"
-          >
-            <Info color="white" size={24} />
-          </TouchableOpacity>
+          <View className="mt-2 flex-row">
+            <TouchableOpacity
+              onPress={() => navigation.navigate('SobreScreen')}
+              className="mr-3 rounded-full bg-green-500 p-3 shadow-sm"
+              accessibilityRole="button"
+              accessibilityLabel="Sobre o aplicativo"
+            >
+              <Info color="white" size={24} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => navigation.navigate('ConfiguracoesScreen')}
+              className="rounded-full bg-green-500 p-3 shadow-sm"
+              accessibilityRole="button"
+              accessibilityLabel="Configurações"
+            >
+              <Settings color="white" size={24} />
+            </TouchableOpacity>
+          </View>
         </View>
 
         <View className="px-6 -mt-10 mb-6">
