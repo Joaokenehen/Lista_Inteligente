@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { Eye, EyeOff } from 'lucide-react-native';
 import { saveAuthToken } from '../services/authStorage';
 import { API_BASE_URL, MENSAGEM_ERRO_CONEXAO } from '../services/apiConfig';
 
@@ -36,6 +37,7 @@ export function LoginScreen({ onAuthenticated }: LoginScreenProps) {
 
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
+  const [mostrarSenha, setMostrarSenha] = useState(false);
 
   // Estados de feedback visual
   const [mensagemErro, setMensagemErro] = useState<string | null>(null);
@@ -191,23 +193,35 @@ export function LoginScreen({ onAuthenticated }: LoginScreenProps) {
           {/* Input Senha */}
           <View className="mb-2">
             <Text className="mb-2 text-left font-semibold text-green-900">Senha</Text>
-            <TextInput
-              ref={senhaInputRef}
-              className="w-full rounded-xl border border-green-200 bg-white px-4 py-3 text-left text-green-950"
-              placeholder="Senha"
-              placeholderTextColor="#86a98d"
-              secureTextEntry
-              value={senha}
-              maxLength={LIMITE_SENHA}
-              onChangeText={setSenha}
-              onFocus={() => focarCampo('senha')}
-              returnKeyType="done"
-              submitBehavior="blurAndSubmit"
-              onSubmitEditing={() => {
-                Keyboard.dismiss();
-                handleLogin();
-              }}
-            />
+            <View className="w-full flex-row items-center rounded-xl border border-green-200 bg-white pr-3">
+              <TextInput
+                ref={senhaInputRef}
+                className="flex-1 px-4 py-3 text-left text-green-950"
+                placeholder="Senha"
+                placeholderTextColor="#86a98d"
+                secureTextEntry={!mostrarSenha}
+                value={senha}
+                maxLength={LIMITE_SENHA}
+                onChangeText={setSenha}
+                onFocus={() => focarCampo('senha')}
+                returnKeyType="done"
+                submitBehavior="blurAndSubmit"
+                onSubmitEditing={() => {
+                  Keyboard.dismiss();
+                  handleLogin();
+                }}
+              />
+              <TouchableOpacity
+                onPress={() => setMostrarSenha((visivel) => !visivel)}
+                accessibilityRole="button"
+                accessibilityLabel={mostrarSenha ? 'Ocultar senha' : 'Mostrar senha'}
+                hitSlop={10}
+              >
+                {mostrarSenha
+                  ? <EyeOff size={20} color="#166534" />
+                  : <Eye size={20} color="#166534" />}
+              </TouchableOpacity>
+            </View>
           </View>
 
           {/* Botão Entrar */}

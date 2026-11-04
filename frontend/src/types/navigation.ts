@@ -8,6 +8,7 @@ export type RootStackParamList = {
     PlanejamentoScreen: { listaid?: string };
     HistoricoScreen: { date: string} | undefined;
     SobreScreen: undefined;
+    ConfiguracoesScreen: undefined;
 };
 
 export type AppNavigationProp = NativeStackNavigationProp<RootStackParamList>;

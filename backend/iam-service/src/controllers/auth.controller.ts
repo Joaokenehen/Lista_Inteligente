@@ -1,9 +1,26 @@
 import { Request, Response } from 'express';
 import { AutenticacaoServico, DadosUsuarioToken } from '../services/auth.service';
 import { UsuarioModel } from '../models/usuario.model';
+import { RequisicaoAutenticada } from '../middlewares/auth.middleware';
 import { logger } from '../utils/logger';
 
 export class AutenticacaoControlador {
+
+  // POST /auth/logout
+  static async encerrarSessao(req: RequisicaoAutenticada, res: Response) {
+    const usuario = req.usuario;
+
+    if (!usuario) {
+      logger.alerta('Tentativa de logout sem usuário autenticado.');
+      return res.status(401).json({ error: 'Sessão não autenticada.' });
+    }
+
+    logger.sucesso(
+      `Logout solicitado para usuário ID ${usuario.id}; o cliente descartará o JWT, que permanece válido até expirar.`
+    );
+
+    return res.status(200).json({ mensagem: 'Logout registrado com sucesso.' });
+  }
   
   // POST /auth/cadastrar
   static async cadastrarUsuario(req: Request, res: Response) {

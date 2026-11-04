@@ -7,10 +7,16 @@ import { PerfilScreen } from '../screens/PerfilScreen';
 import { SelecionarPerfilScreen } from '../screens/SelecionarPerfilScreen';
 import { SobreScreen } from '../screens/SobreScreen';
 import { PlanejamentoScreen } from '../screens/PlanejamentoScreen';
+import { ConfiguracoesScreen } from '../screens/ConfiguracoesScreen';
 
 const Stack = createNativeStackNavigator();
 
-export function AppNavigator() {
+type AppNavigatorProps = {
+  autenticado: boolean;
+  onSair: () => void;
+};
+
+export function AppNavigator({ autenticado, onSair }: AppNavigatorProps) {
   return (
     <Stack.Navigator 
       initialRouteName="SelecionarPerfilScreen"
@@ -26,6 +32,15 @@ export function AppNavigator() {
       <Stack.Screen name="ListaComprasScreen" component={ListaComprasScreen} />
       <Stack.Screen name="HistoricoScreen" component={HistoricoScreen} />
       <Stack.Screen name="SobreScreen" component={SobreScreen} />
+      <Stack.Screen name="ConfiguracoesScreen">
+        {(props) => (
+          <ConfiguracoesScreen
+            {...props}
+            autenticado={autenticado}
+            onSair={onSair}
+          />
+        )}
+      </Stack.Screen>
     </Stack.Navigator>
   );
 }

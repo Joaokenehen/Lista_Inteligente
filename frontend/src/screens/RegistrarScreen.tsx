@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { Eye, EyeOff } from 'lucide-react-native';
 import { API_BASE_URL, MENSAGEM_ERRO_CONEXAO } from '../services/apiConfig';
 
 type AuthStackParamList = {
@@ -35,6 +36,8 @@ export function RegistrarScreen() {
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [confirmarSenha, setConfirmarSenha] = useState('');
+  const [mostrarSenha, setMostrarSenha] = useState(false);
+  const [mostrarConfirmarSenha, setMostrarConfirmarSenha] = useState(false);
   const [mensagemErro, setMensagemErro] = useState<string | null>(null);
   const [carregando, setCarregando] = useState(false);
   const [alturaTeclado, setAlturaTeclado] = useState(0);
@@ -220,20 +223,32 @@ export function RegistrarScreen() {
 
           <View className="mb-4">
             <Text className="mb-2 text-left font-semibold text-green-900">Senha</Text>
-            <TextInput
-              ref={senhaInputRef}
-              className="w-full rounded-xl border border-green-200 bg-white px-4 py-3 text-left text-green-950"
-              placeholder="Senha"
-              placeholderTextColor="#86a98d"
-              secureTextEntry
-              value={senha}
-              maxLength={LIMITE_SENHA}
-              onChangeText={setSenha}
-              onFocus={() => focarCampo('senha')}
-              returnKeyType="next"
-              submitBehavior="submit"
-              onSubmitEditing={() => confirmarSenhaInputRef.current?.focus()}
-            />
+            <View className="w-full flex-row items-center rounded-xl border border-green-200 bg-white pr-3">
+              <TextInput
+                ref={senhaInputRef}
+                className="flex-1 px-4 py-3 text-left text-green-950"
+                placeholder="Senha"
+                placeholderTextColor="#86a98d"
+                secureTextEntry={!mostrarSenha}
+                value={senha}
+                maxLength={LIMITE_SENHA}
+                onChangeText={setSenha}
+                onFocus={() => focarCampo('senha')}
+                returnKeyType="next"
+                submitBehavior="submit"
+                onSubmitEditing={() => confirmarSenhaInputRef.current?.focus()}
+              />
+              <TouchableOpacity
+                onPress={() => setMostrarSenha((visivel) => !visivel)}
+                accessibilityRole="button"
+                accessibilityLabel={mostrarSenha ? 'Ocultar senha' : 'Mostrar senha'}
+                hitSlop={10}
+              >
+                {mostrarSenha
+                  ? <EyeOff size={20} color="#166534" />
+                  : <Eye size={20} color="#166534" />}
+              </TouchableOpacity>
+            </View>
             <View className="mt-2">
               {requisitosSenha.map((requisito) => (
                 <Text
@@ -248,23 +263,35 @@ export function RegistrarScreen() {
 
           <View className="mb-2">
             <Text className="mb-2 text-left font-semibold text-green-900">Confirmar Senha</Text>
-            <TextInput
-              ref={confirmarSenhaInputRef}
-              className="w-full rounded-xl border border-green-200 bg-white px-4 py-3 text-left text-green-950"
-              placeholder="Confirme a senha"
-              placeholderTextColor="#86a98d"
-              secureTextEntry
-              value={confirmarSenha}
-              maxLength={LIMITE_SENHA}
-              onChangeText={setConfirmarSenha}
-              onFocus={() => focarCampo('confirmarSenha')}
-              returnKeyType="done"
-              submitBehavior="blurAndSubmit"
-              onSubmitEditing={() => {
-                Keyboard.dismiss();
-                handleRegistrar();
-              }}
-            />
+            <View className="w-full flex-row items-center rounded-xl border border-green-200 bg-white pr-3">
+              <TextInput
+                ref={confirmarSenhaInputRef}
+                className="flex-1 px-4 py-3 text-left text-green-950"
+                placeholder="Confirme a senha"
+                placeholderTextColor="#86a98d"
+                secureTextEntry={!mostrarConfirmarSenha}
+                value={confirmarSenha}
+                maxLength={LIMITE_SENHA}
+                onChangeText={setConfirmarSenha}
+                onFocus={() => focarCampo('confirmarSenha')}
+                returnKeyType="done"
+                submitBehavior="blurAndSubmit"
+                onSubmitEditing={() => {
+                  Keyboard.dismiss();
+                  handleRegistrar();
+                }}
+              />
+              <TouchableOpacity
+                onPress={() => setMostrarConfirmarSenha((visivel) => !visivel)}
+                accessibilityRole="button"
+                accessibilityLabel={mostrarConfirmarSenha ? 'Ocultar confirmação de senha' : 'Mostrar confirmação de senha'}
+                hitSlop={10}
+              >
+                {mostrarConfirmarSenha
+                  ? <EyeOff size={20} color="#166534" />
+                  : <Eye size={20} color="#166534" />}
+              </TouchableOpacity>
+            </View>
           </View>
 
           <TouchableOpacity 

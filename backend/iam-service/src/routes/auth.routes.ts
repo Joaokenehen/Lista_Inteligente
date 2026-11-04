@@ -78,6 +78,22 @@ roteador.post('/login', limitadorAutenticacao, AutenticacaoControlador.realizarL
 
 /**
  * @swagger
+ * /auth/logout:
+ *   post:
+ *     summary: Registra o encerramento da sessão autenticada no cliente
+ *     tags: [Autenticação]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Logout registrado
+ *       401:
+ *         description: Token ausente, inválido ou expirado
+ */
+roteador.post('/logout', verificarAutenticacao, AutenticacaoControlador.encerrarSessao);
+
+/**
+ * @swagger
  * /auth/validar:
  *   post:
  *     summary: Valida a integridade do token JWT informado

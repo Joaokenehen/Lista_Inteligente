@@ -34,7 +34,7 @@ export function AppRoutes() {
   }
 
   return isAuthenticated ? (
-    <AppNavigator />
+    <AppNavigator autenticado onSair={() => setIsAuthenticated(false)} />
   ) : (
     <AuthNavigator onAuthenticated={() => setIsAuthenticated(true)} />
   );

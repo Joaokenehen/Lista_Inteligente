@@ -32,7 +32,14 @@ export function AuthNavigator({ onAuthenticated }: AuthNavigatorProps) {
         {(props) => <LoginScreen {...props} onAuthenticated={onAuthenticated} />}
       </Stack.Screen>
       <Stack.Screen name="Registrar" component={RegistrarScreen} />
-      <Stack.Screen name="App" component={AppNavigator} />
+      <Stack.Screen name="App">
+        {(props) => (
+          <AppNavigator
+            autenticado={false}
+            onSair={() => props.navigation.navigate('Dashboard')}
+          />
+        )}
+      </Stack.Screen>
     </Stack.Navigator>
   );
 }

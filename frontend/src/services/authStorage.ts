@@ -28,3 +28,16 @@ export async function saveAuthToken(token: string): Promise<void> {
 
   await SecureStore.setItemAsync(TOKEN_KEY, token);
 }
+
+export async function removeAuthToken(): Promise<void> {
+  if (Platform.OS === 'web') {
+    tokenEmMemoria = null;
+    return;
+  }
+
+  if (!(await SecureStore.isAvailableAsync())) {
+    throw new Error('O armazenamento seguro não está disponível neste dispositivo.');
+  }
+
+  await SecureStore.deleteItemAsync(TOKEN_KEY);
+}
