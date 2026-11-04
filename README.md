@@ -51,7 +51,7 @@ $ npx expo start
   <img src="https://github.com/user-attachments/assets/241c0dc3-0cc2-4bbc-9d05-b38bbb2e7aa9" width="250" alt="Tela de Lista de Compras" />
 </p>
 
-## 🗺️ Roadmap (Futuras Atualizações)
+##  Roadmap (Futuras Atualizações)
 [ ] Sincronização em nuvem para listas compartilhadas em tempo real.
 
 [ ] Criação de templates de listas (ex: "Compra do Mês", "Churrasco").
