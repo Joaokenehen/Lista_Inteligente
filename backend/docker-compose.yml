@@ -43,7 +43,7 @@ services:
   # ==================== MICROSSERVIÇOS ====================
   iam-service:
     build: ./iam-service
-    container_name: iam_service
+    container_name: cartflow-iam_service
     restart: unless-stopped
     env_file:
       - .env
