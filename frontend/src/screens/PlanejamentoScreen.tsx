@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert, KeyboardAvoidingView, Platform } from 'react-native';
+import React, { useRef, useState } from 'react';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert, KeyboardAvoidingView, Platform, type TextInputInstance } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ChevronLeft, Plus, Save, Trash2, Minus } from 'lucide-react-native';
 import { AppNavigationProp } from '../types/navigation';
 import { ItemPlanejado, ListaAtiva } from '../types/shopping';
+import { obterDadoDoPerfil, salvarDadoDoPerfil } from '../services/dadosPerfil';
 
 export function PlanejamentoScreen() {
   const navigation = useNavigation<AppNavigationProp>();
@@ -12,6 +12,7 @@ export function PlanejamentoScreen() {
   const [nomeItem, setNomeItem] = useState('');
   const [quantidade, setQuantidade] = useState(1);
   const [itens, setItens] = useState<ItemPlanejado[]>([]);
+  const nomeItemInputRef = useRef<TextInputInstance | null>(null);
 
   const handleAdicionarItem = () => {
     if (!nomeItem.trim()) return;
@@ -24,9 +25,10 @@ export function PlanejamentoScreen() {
       preco: 0
     };
 
-    setItens([...itens, novoItem]);
+    setItens(itensAtuais => [...itensAtuais, novoItem]);
     setNomeItem('');
     setQuantidade(1);
+    setTimeout(() => nomeItemInputRef.current?.focus(), 50);
   };
 
   const removerItem = (id: string) => {
@@ -43,12 +45,12 @@ export function PlanejamentoScreen() {
       };
 
       // Busca o que já existe
-      const listasSalvas = await AsyncStorage.getItem("@Lista-inteligente:listasAtivas");
+      const listasSalvas = await obterDadoDoPerfil('listasAtivas');
       const listasAtuais = listasSalvas ? JSON.parse(listasSalvas) : [];
       
       listasAtuais.unshift(novaLista);
       
-      await AsyncStorage.setItem("@Lista-inteligente:listasAtivas", JSON.stringify(listasAtuais));
+      await salvarDadoDoPerfil('listasAtivas', JSON.stringify(listasAtuais));
       
       Alert.alert("Sucesso!", "Lista salva e pronta para o mercado.");
       navigation.navigate('HomeScreen');
@@ -100,8 +102,11 @@ export function PlanejamentoScreen() {
           <TextInput 
             placeholder="Ex: Mercado do Mês"
             className="bg-white p-4 rounded-2xl text-slate-800 text-lg border border-slate-200 shadow-sm"
+            returnKeyType="next"
+            submitBehavior="submit"
             value={nomeLista}
             onChangeText={setNomeLista}
+            onSubmitEditing={() => nomeItemInputRef.current?.focus()}
             maxLength={40}
           />
         </View>
@@ -112,9 +117,13 @@ export function PlanejamentoScreen() {
           
           <TextInput 
             placeholder="O que você precisa?"
+            ref={nomeItemInputRef}
             className="bg-slate-100 p-4 rounded-xl text-slate-800 mb-4"
+            returnKeyType="done"
+            submitBehavior="submit"
             value={nomeItem}
             onChangeText={setNomeItem}
+            onSubmitEditing={handleAdicionarItem}
             maxLength={45}
           />
 

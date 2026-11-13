@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, FlatList, Alert, Modal } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { ChevronLeft, ShoppingBag, Trash2, Circle, CheckSquare } from 'lucide-react-native';
+import { ChevronLeft, ShoppingBag, Trash2, Circle, CheckSquare, Share2 } from 'lucide-react-native';
 import { AppNavigationProp } from '../types/navigation';
 import { HistoricoCard, CompraHistorico } from '../components/HistoricoCard';
+import { abrirOpcoesCompartilhamento, compartilharCompra, compartilharHistorico, pdfCompra, pdfHistorico } from '../services/exportacao';
+import { obterDadoDoPerfil, salvarDadoDoPerfil } from '../services/dadosPerfil';
 
 export function HistoricoScreen() {
   const navigation = useNavigation<AppNavigationProp>();
@@ -24,7 +25,7 @@ export function HistoricoScreen() {
 
   async function carregarHistorico() {
     try {
-      const dados = await AsyncStorage.getItem('@Lista-inteligente:historico');
+      const dados = await obterDadoDoPerfil('historico');
       if (dados) {
         setHistorico(JSON.parse(dados));
       }
@@ -79,7 +80,7 @@ export function HistoricoScreen() {
     setHistorico(novoHistorico);
     setSelecionados([]);
     setModoExclusao(false);
-    await AsyncStorage.setItem('@Lista-inteligente:historico', JSON.stringify(novoHistorico));
+    await salvarDadoDoPerfil('historico', JSON.stringify(novoHistorico));
   };
 
   return (
@@ -130,6 +131,22 @@ export function HistoricoScreen() {
           <Text className="text-blue-700 text-4xl font-black">
             R$ {historico.reduce((acc, curr) => acc + (curr.valorTotal || 0), 0).toFixed(2)}
           </Text>
+          {historico.length > 0 && (
+            <View className="mt-4">
+              <TouchableOpacity
+                onPress={() => abrirOpcoesCompartilhamento(
+                  () => void compartilharHistorico(historico),
+                  () => void pdfHistorico(historico)
+                )}
+                className="flex-row items-center justify-center rounded-xl bg-blue-50 p-3"
+                accessibilityRole="button"
+                accessibilityLabel="Compartilhar todo o histórico"
+              >
+                <Share2 size={18} color="#1d4ed8" />
+                <Text className="ml-2 font-bold text-blue-800">Compartilhar</Text>
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
       )}
 
@@ -184,10 +201,24 @@ export function HistoricoScreen() {
               )}
             />
 
-            <View className="flex-row gap-3">
+            <View className="flex-row gap-3 flex-wrap">
+              {compraSelecionada && (
+                <TouchableOpacity
+                  onPress={() => abrirOpcoesCompartilhamento(
+                    () => void compartilharCompra(compraSelecionada),
+                    () => void pdfCompra(compraSelecionada)
+                  )}
+                  className="w-full flex-row items-center justify-center bg-blue-50 p-4 rounded-2xl mt-4"
+                  accessibilityRole="button"
+                  accessibilityLabel="Compartilhar esta compra"
+                >
+                  <Share2 size={18} color="#1d4ed8" />
+                  <Text className="ml-2 text-blue-800 font-bold">Compartilhar</Text>
+                </TouchableOpacity>
+              )}
               <TouchableOpacity 
                 onPress={() => setModalVisivel(false)}
-                className="flex-1 bg-blue-600 p-4 rounded-2xl items-center mt-4"
+                className="w-full bg-blue-600 p-4 rounded-2xl items-center mt-1"
               >
                 <Text className="text-white font-bold text-lg">Fechar</Text>
               </TouchableOpacity>

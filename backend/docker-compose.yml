@@ -49,7 +49,11 @@ services:
       - .env
     environment:
       - AUTH_SERVICE_PORT=3001
-      - DATABASE_URL=mysql://${DB_USER:-mysqluser}:${DB_PASSWORD:-mysqlpass}@mysql:3306/${DB_NAME:-lista_inteligente_db}
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_NAME=${DB_NAME:-lista_inteligente_db}
+      - DB_USER=${DB_USER:-mysqluser}
+      - DB_PASSWORD=${DB_PASSWORD:-mysqlpass}
       - JWT_SECRET=${JWT_SECRET:-sua_chave_secreta_super_segura}
       - FORCE_COLOR=1
     depends_on:

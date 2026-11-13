@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, Modal, Alert, KeyboardAvoidingView, Platform, Switch } from 'react-native';
 import { useNavigation, useRoute, RouteProp, useFocusEffect } from '@react-navigation/native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { ChevronLeft, Plus, ShoppingBag, Minus, Trash, Pencil } from 'lucide-react-native';
+import { ChevronLeft, Plus, ShoppingBag, Minus, Trash, Pencil, Share2 } from 'lucide-react-native';
 import { ProdutoCard } from '../components/ProdutoCard';
 import { AppNavigationProp, RootStackParamList } from '../types/navigation';
 import { ItemPlanejado, ListaAtiva, ComprasHistorico, ListaItem } from '../types/shopping';
 import { CampoMoeda } from '@/components/CampoMoeda';
+import { abrirOpcoesCompartilhamento, compartilharLista, pdfLista } from '../services/exportacao';
+import { obterDadoDoPerfil, salvarDadoDoPerfil } from '../services/dadosPerfil';
 
 type ListaComprasRouteProp = RouteProp<RootStackParamList, 'ListaComprasScreen'>;
 
@@ -37,7 +38,7 @@ export function ListaComprasScreen() {
 
   const carregarLista = async () => {
     try {
-      const listasSalvas = await AsyncStorage.getItem("@Lista-inteligente:listasAtivas");
+      const listasSalvas = await obterDadoDoPerfil('listasAtivas');
       if (listasSalvas) {
         const listasAtuais: ListaAtiva[] = JSON.parse(listasSalvas);
         const listaEncontrada = listasAtuais.find(l => l.id === listaId);
@@ -61,13 +62,13 @@ export function ListaComprasScreen() {
     setItens(novaListaItens);
     
     try {
-      const listasSalvas = await AsyncStorage.getItem("@Lista-inteligente:listasAtivas");
+      const listasSalvas = await obterDadoDoPerfil('listasAtivas');
       if (listasSalvas) {
         let listasAtuais: ListaAtiva[] = JSON.parse(listasSalvas);
         listasAtuais = listasAtuais.map(l =>
           l.id === listaId ? { ...l, itens: novaListaItens } : l
         );
-        await AsyncStorage.setItem("@Lista-inteligente:listasAtivas", JSON.stringify(listasAtuais));
+        await salvarDadoDoPerfil('listasAtivas', JSON.stringify(listasAtuais));
       }
     } catch (error) {
       console.error("Erro ao salvar progresso", error);
@@ -249,12 +250,12 @@ export function ListaComprasScreen() {
         itens: itensParaHistorico
       };
 
-      const historicoSalvo = await AsyncStorage.getItem('@Lista-inteligente:historico');
+      const historicoSalvo = await obterDadoDoPerfil('historico');
       const historico = historicoSalvo ? JSON.parse(historicoSalvo) : [];
       historico.unshift(novaCompra);
-      await AsyncStorage.setItem('@Lista-inteligente:historico', JSON.stringify(historico));
+      await salvarDadoDoPerfil('historico', JSON.stringify(historico));
 
-      const listasSalvas = await AsyncStorage.getItem("@Lista-inteligente:listasAtivas");
+      const listasSalvas = await obterDadoDoPerfil('listasAtivas');
       if (listasSalvas) {
         let listasAtuais: ListaAtiva[] = JSON.parse(listasSalvas);
         
@@ -265,7 +266,7 @@ export function ListaComprasScreen() {
             l.id === listaId ? { ...l, itens: faltamPegar } : l
           );
         }
-        await AsyncStorage.setItem("@Lista-inteligente:listasAtivas", JSON.stringify(listasAtuais));
+        await salvarDadoDoPerfil('listasAtivas', JSON.stringify(listasAtuais));
       }
 
       Alert.alert(
@@ -291,11 +292,11 @@ export function ListaComprasScreen() {
 
   const excluirLista = async () => {
     try {
-      const listasSalvas = await AsyncStorage.getItem("@Lista-inteligente:listasAtivas");
+      const listasSalvas = await obterDadoDoPerfil('listasAtivas');
       if (listasSalvas) {
         let listasAtuais: ListaAtiva[] = JSON.parse(listasSalvas);
         listasAtuais = listasAtuais.filter(l => l.id !== listaId);
-        await AsyncStorage.setItem("@Lista-inteligente:listasAtivas", JSON.stringify(listasAtuais));
+        await salvarDadoDoPerfil('listasAtivas', JSON.stringify(listasAtuais));
         navigation.goBack(); // Volta para a tela inicial
       }
     } catch (error) {
@@ -309,11 +310,11 @@ export function ListaComprasScreen() {
       return;
     }
     try {
-      const listasSalvas = await AsyncStorage.getItem("@Lista-inteligente:listasAtivas");
+      const listasSalvas = await obterDadoDoPerfil('listasAtivas');
       if (listasSalvas) {
         let listasAtuais: ListaAtiva[] = JSON.parse(listasSalvas);
         listasAtuais = listasAtuais.map(l => l.id === listaId ? { ...l, nome: nomeListaEditado.trim() } : l);
-        await AsyncStorage.setItem("@Lista-inteligente:listasAtivas", JSON.stringify(listasAtuais));
+        await salvarDadoDoPerfil('listasAtivas', JSON.stringify(listasAtuais));
         setListaAtual(prev => prev ? { ...prev, nome: nomeListaEditado.trim() } : null);
         setModalEdicaoListaVisivel(false);
       }
@@ -342,6 +343,22 @@ export function ListaComprasScreen() {
             <Trash color="white" size={22} />
           </TouchableOpacity>
         </View>
+      </View>
+
+      <View className="bg-green-50 px-4 py-3">
+        <TouchableOpacity
+          onPress={() => listaAtual && abrirOpcoesCompartilhamento(
+            () => void compartilharLista(listaAtual, itens),
+            () => void pdfLista(listaAtual, itens)
+          )}
+          disabled={!listaAtual}
+          className="flex-row items-center justify-center rounded-xl bg-white p-3 border border-green-100"
+          accessibilityRole="button"
+          accessibilityLabel="Compartilhar esta lista"
+        >
+          <Share2 size={18} color="#15803d" />
+          <Text className="ml-2 font-bold text-green-800">Compartilhar</Text>
+        </TouchableOpacity>
       </View>
 
       <View className="p-4 bg-white border-b border-slate-200 flex-row gap-3">

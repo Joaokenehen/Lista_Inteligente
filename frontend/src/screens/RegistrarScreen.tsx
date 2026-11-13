@@ -29,6 +29,13 @@ const LIMITE_NOME = 100;
 const LIMITE_EMAIL = 254;
 const LIMITE_SENHA = 128;
 
+async function lerRespostaApi(response: Response): Promise<Record<string, unknown>> {
+  const data: unknown = await response.json().catch(() => null);
+  return typeof data === 'object' && data !== null
+    ? data as Record<string, unknown>
+    : {};
+}
+
 export function RegistrarScreen() {
   const navigation = useNavigation<NavigationProps>();
 
@@ -135,10 +142,12 @@ export function RegistrarScreen() {
         throw new Error(MENSAGEM_ERRO_CONEXAO);
       }
 
-      const data = await response.json();
+      const data = await lerRespostaApi(response);
 
       if (!response.ok) {
-        throw new Error(data.error || 'Ocorreu um erro ao realizar o cadastro.');
+        throw new Error(
+          typeof data.error === 'string' ? data.error : 'Ocorreu um erro ao realizar o cadastro.'
+        );
       }
 
       navigation.navigate('Login');

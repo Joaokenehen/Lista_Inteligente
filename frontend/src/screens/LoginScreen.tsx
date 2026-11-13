@@ -32,6 +32,14 @@ type LoginScreenProps = {
 
 const LIMITE_EMAIL = 254;
 const LIMITE_SENHA = 128;
+const EMAIL_VALIDO = /^[^\s@]+@[^\s@]+\.com$/i;
+
+async function lerRespostaApi(response: Response): Promise<Record<string, unknown>> {
+  const data: unknown = await response.json().catch(() => null);
+  return typeof data === 'object' && data !== null
+    ? data as Record<string, unknown>
+    : {};
+}
 
 export function LoginScreen({ onAuthenticated, mensagemInicial }: LoginScreenProps) {
   const navigation = useNavigation<NavigationProps>();
@@ -92,6 +100,11 @@ export function LoginScreen({ onAuthenticated, mensagemInicial }: LoginScreenPro
       return;
     }
 
+    if (email.trim().length > LIMITE_EMAIL || !EMAIL_VALIDO.test(email.trim())) {
+      setMensagemErro('Informe um e-mail válido terminado em .com.');
+      return;
+    }
+
     setCarregando(true);
 
     try {
@@ -112,11 +125,7 @@ export function LoginScreen({ onAuthenticated, mensagemInicial }: LoginScreenPro
         throw new Error(MENSAGEM_ERRO_CONEXAO);
       }
 
-      const data: unknown = await response.json();
-
-      const resposta = typeof data === 'object' && data !== null
-        ? data as { error?: unknown; token?: unknown }
-        : {};
+      const resposta = await lerRespostaApi(response);
       if (!response.ok) {
         throw new Error(
           typeof resposta.error === 'string' ? resposta.error : 'Erro ao realizar login.'

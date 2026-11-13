@@ -23,14 +23,22 @@ export function PerfilScreen() {
 
         try {
             const perfisSalvos = await AsyncStorage.getItem('@Lista-inteligente:perfis');
-            let listaPerfis = perfisSalvos ? JSON.parse(perfisSalvos) : [];
+            const listaPerfis: string[] = perfisSalvos ? JSON.parse(perfisSalvos) : [];
+            const nomeNormalizado = nome.trim().normalize('NFC');
+            const nomeJaExiste = listaPerfis.some(
+                perfil => perfil.trim().normalize('NFC').toLocaleLowerCase('pt-BR') ===
+                    nomeNormalizado.toLocaleLowerCase('pt-BR')
+            );
 
-            if (!listaPerfis.includes(nome.trim())) {
-                listaPerfis.push(nome.trim());
-                await AsyncStorage.setItem('@Lista-inteligente:perfis', JSON.stringify(listaPerfis));
+            if (nomeJaExiste) {
+                Alert.alert("Perfil já cadastrado", "Já existe um perfil com esse nome. Escolha outro nome.");
+                return;
             }
 
-            await AsyncStorage.setItem('@Lista-inteligente:perfilAtual', nome.trim());
+            listaPerfis.push(nomeNormalizado);
+            await AsyncStorage.setItem('@Lista-inteligente:perfis', JSON.stringify(listaPerfis));
+
+            await AsyncStorage.setItem('@Lista-inteligente:perfilAtual', nomeNormalizado);
             
             Alert.alert("Sucesso", "Nome salvo com sucesso!");
             navigation.navigate("HomeScreen");

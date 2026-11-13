@@ -5,6 +5,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { PerfilCard } from '../components/PerfilCard';
 import { Plus } from 'lucide-react-native';
 import { AppNavigationProp } from '../types/navigation';
+import { renomearDadosDoPerfil, removerDadosDoPerfil } from '../services/dadosPerfil';
 
 export function SelecionarPerfilScreen() {
   const [perfis, setPerfis] = useState<string[]>([]);
@@ -56,13 +57,20 @@ export function SelecionarPerfilScreen() {
       return;
     }
 
-    if (perfis.includes(novoNome.trim())) {
+    const nomeNormalizado = novoNome.trim().normalize('NFC').toLocaleLowerCase('pt-BR');
+    const nomeJaExiste = perfis.some(
+      perfil => perfil !== perfilEditando &&
+        perfil.trim().normalize('NFC').toLocaleLowerCase('pt-BR') === nomeNormalizado
+    );
+
+    if (nomeJaExiste) {
       Alert.alert("Erro", "Este perfil já existe.");
       return;
     }
 
     // Substitui o nome antigo pelo novo
     const novaLista = perfis.map(p => p === perfilEditando ? novoNome.trim() : p);
+    await renomearDadosDoPerfil(perfilEditando, novoNome.trim());
     await AsyncStorage.setItem('@Lista-inteligente:perfis', JSON.stringify(novaLista));
     
     // Se o usuário editado era o logado, atualiza o atual também
@@ -86,6 +94,7 @@ export function SelecionarPerfilScreen() {
           style: "destructive", 
           onPress: async () => {
             const novaLista = perfis.filter(p => p !== perfilEditando);
+            await removerDadosDoPerfil(perfilEditando);
             await AsyncStorage.setItem('@Lista-inteligente:perfis', JSON.stringify(novaLista));
             setPerfis(novaLista);
             setModalVisivel(false);

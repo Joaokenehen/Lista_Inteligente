@@ -2,13 +2,16 @@ import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { AppNavigationProp } from '../types/navigation';
-import { History, PlusCircle, ArrowRight, Users, Info, ShoppingCart, Settings } from 'lucide-react-native';
+import { History, PlusCircle, ArrowRight, Users, Info, ShoppingCart, Settings, Share2 } from 'lucide-react-native';
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { ListaAtiva } from '../types/shopping';
+import { abrirOpcoesCompartilhamento, compartilharListas, pdfListas } from '../services/exportacao';
+import { obterDadoDoPerfil, salvarDadoDoPerfil } from '../services/dadosPerfil';
 
 export function HomeScreen() {
   const navigation = useNavigation<AppNavigationProp>();
   const [nomeUsuario, setNomeUsuario] = useState("Usuário");
-  const [listasAtivas, setListasAtivas] = useState<any[]>([]);
+  const [listasAtivas, setListasAtivas] = useState<ListaAtiva[]>([]);
   const [perfilVerificado, setPerfilVerificado] = useState(false);
 
   useFocusEffect(
@@ -25,9 +28,9 @@ export function HomeScreen() {
           setNomeUsuario(nomeSalvo);
 
           // ✨ NOVO: Busca as listas criadas no AsyncStorage
-          const listasSalvas = await AsyncStorage.getItem("@Lista-inteligente:listasAtivas");
+          const listasSalvas = await obterDadoDoPerfil('listasAtivas');
           if (listasSalvas) {
-            let listasParsed = JSON.parse(listasSalvas);
+            let listasParsed: ListaAtiva[] = JSON.parse(listasSalvas);
             
             let precisouCorrigir = false;
             listasParsed = listasParsed.map((l: any) => {
@@ -37,7 +40,7 @@ export function HomeScreen() {
               }
               return l;
             });
-            if (precisouCorrigir) await AsyncStorage.setItem("@Lista-inteligente:listasAtivas", JSON.stringify(listasParsed));
+            if (precisouCorrigir) await salvarDadoDoPerfil('listasAtivas', JSON.stringify(listasParsed));
             
             setListasAtivas(listasParsed);
           } else {
@@ -127,7 +130,23 @@ export function HomeScreen() {
         </View>
 
         <View className="px-6 mb-10">
-          <Text className="text-slate-800 font-bold text-xl mb-4">Minhas Listas</Text>
+          <View className="flex-row items-center justify-between mb-4">
+            <Text className="text-slate-800 font-bold text-xl">Minhas Listas</Text>
+            {listasAtivas.length > 0 && (
+              <TouchableOpacity
+                onPress={() => abrirOpcoesCompartilhamento(
+                  () => void compartilharListas(listasAtivas),
+                  () => void pdfListas(listasAtivas)
+                )}
+                className="flex-row items-center rounded-xl bg-green-100 px-3 py-2"
+                accessibilityRole="button"
+                accessibilityLabel="Compartilhar todas as listas"
+              >
+                <Share2 size={16} color="#15803d" />
+                <Text className="ml-1 text-xs font-bold text-green-800">Compartilhar</Text>
+              </TouchableOpacity>
+            )}
+          </View>
           
           {listasAtivas.length === 0 ? (
             <View className="bg-slate-100 p-6 rounded-[24px] items-center border border-slate-200 border-dashed">
