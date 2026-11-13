@@ -1,10 +1,11 @@
 import React, { useRef, useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert, KeyboardAvoidingView, Platform, type TextInputInstance } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { ChevronLeft, Plus, Save, Trash2, Minus } from 'lucide-react-native';
+import { ChevronLeft, Plus, Save, Trash2, Minus, LayoutGrid } from 'lucide-react-native';
 import { AppNavigationProp } from '../types/navigation';
 import { ItemPlanejado, ListaAtiva } from '../types/shopping';
 import { obterDadoDoPerfil, salvarDadoDoPerfil } from '../services/dadosPerfil';
+import { CatalogoItensModal } from '../components/CatalogoItensModal';
 
 export function PlanejamentoScreen() {
   const navigation = useNavigation<AppNavigationProp>();
@@ -13,6 +14,25 @@ export function PlanejamentoScreen() {
   const [quantidade, setQuantidade] = useState(1);
   const [itens, setItens] = useState<ItemPlanejado[]>([]);
   const nomeItemInputRef = useRef<TextInputInstance | null>(null);
+  const [modalCatalogoVisivel, setModalCatalogoVisivel] = useState(false);
+
+  const alternarItemCatalogo = (nome: string) => {
+    const nomeNormalizado = nome.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('pt-BR').trim();
+    setItens(itensAtuais => {
+      const itemExistente = itensAtuais.find(item =>
+        item.nome.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('pt-BR').trim() === nomeNormalizado
+      );
+      if (itemExistente) return itensAtuais.filter(item => item.id !== itemExistente.id);
+
+      return [...itensAtuais, {
+        id: Date.now().toString() + Math.random().toString(36).substring(2, 9),
+        nome,
+        quantidade: 1,
+        comprado: false,
+        preco: 0,
+      }];
+    });
+  };
 
   const handleAdicionarItem = () => {
     if (!nomeItem.trim()) return;
@@ -127,6 +147,16 @@ export function PlanejamentoScreen() {
             maxLength={45}
           />
 
+          <TouchableOpacity
+            onPress={() => setModalCatalogoVisivel(true)}
+            className="mb-4 flex-row items-center justify-center rounded-xl border border-blue-100 bg-blue-50 p-3"
+            accessibilityRole="button"
+            accessibilityLabel="Abrir catálogo de itens prontos"
+          >
+            <LayoutGrid color="#2563eb" size={20} />
+            <Text className="ml-2 font-bold text-blue-800">Adicionar itens prontos</Text>
+          </TouchableOpacity>
+
           <View className="flex-row items-center justify-between mb-4">
             <Text className="text-slate-600 font-medium">Quantidade:</Text>
             <View className="flex-row items-center bg-slate-100 rounded-xl p-1">
@@ -184,6 +214,13 @@ export function PlanejamentoScreen() {
           <Text className="text-white font-black text-lg">SALVAR LISTA ATIVA</Text>
         </TouchableOpacity>
       </View>
+
+      <CatalogoItensModal
+        visible={modalCatalogoVisivel}
+        nomesSelecionados={itens.map(item => item.nome)}
+        onAlternarItem={alternarItemCatalogo}
+        onClose={() => setModalCatalogoVisivel(false)}
+      />
     </KeyboardAvoidingView>
   );
 }

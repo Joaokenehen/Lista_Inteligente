@@ -1,15 +1,19 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, Modal, Alert, KeyboardAvoidingView, Platform, Switch } from 'react-native';
 import { useNavigation, useRoute, RouteProp, useFocusEffect } from '@react-navigation/native';
-import { ChevronLeft, Plus, ShoppingBag, Minus, Trash, Pencil, Share2 } from 'lucide-react-native';
+import { ChevronLeft, Plus, ShoppingBag, Minus, Trash, Pencil, Share2, LayoutGrid } from 'lucide-react-native';
 import { ProdutoCard } from '../components/ProdutoCard';
 import { AppNavigationProp, RootStackParamList } from '../types/navigation';
 import { ItemPlanejado, ListaAtiva, ComprasHistorico, ListaItem } from '../types/shopping';
 import { CampoMoeda } from '@/components/CampoMoeda';
 import { abrirOpcoesCompartilhamento, compartilharLista, pdfLista } from '../services/exportacao';
 import { obterDadoDoPerfil, salvarDadoDoPerfil } from '../services/dadosPerfil';
+import { CatalogoItensModal } from '../components/CatalogoItensModal';
 
 type ListaComprasRouteProp = RouteProp<RootStackParamList, 'ListaComprasScreen'>;
+
+const normalizarTexto = (texto: string) =>
+  texto.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('pt-BR').trim();
 
 export function ListaComprasScreen() {
   const navigation = useNavigation<AppNavigationProp>();
@@ -19,6 +23,7 @@ export function ListaComprasScreen() {
   const [itens, setItens] = useState<ItemPlanejado[]>([]);
   const [itensSelecionados, setItensSelecionados] = useState<string[]>([]);
   const [nomeNovoItem, setNomeNovoItem] = useState('');
+  const [modalCatalogoVisivel, setModalCatalogoVisivel] = useState(false);
   const [modalVisivel, setModalVisivel] = useState(false);
   const [itemSelecionado, setItemSelecionado] = useState<ItemPlanejado | null>(null);
   const [precoDigitado, setPrecoDigitado] = useState('');
@@ -83,6 +88,27 @@ export function ListaComprasScreen() {
     : quantidadeDigitada;
   const precoAtual = parseFloat(precoDigitado.trim().replace(/\./g, '').replace(',', '.')) || 0;
   const valorEstimadoItem = precoAtual * quantidadeOuPesoAtual;
+
+  const itemEstaNaLista = (nome: string) =>
+    itens.some(item => normalizarTexto(item.nome) === normalizarTexto(nome));
+
+  const alternarItemCatalogo = (nome: string) => {
+    const itemExistente = itens.find(item => normalizarTexto(item.nome) === normalizarTexto(nome));
+    if (itemExistente) {
+      atualizarListaLocal(itens.filter(item => item.id !== itemExistente.id));
+      setItensSelecionados(ids => ids.filter(id => id !== itemExistente.id));
+      return;
+    }
+
+    const novoItem: ItemPlanejado = {
+      id: Date.now().toString() + Math.random().toString(36).substring(2, 9),
+      nome,
+      quantidade: 1,
+      comprado: false,
+      preco: 0,
+    };
+    atualizarListaLocal([...itens, novoItem]);
+  };
 
   const handleAdicionarItem = () => {
     if (!nomeNovoItem.trim()) return;
@@ -370,6 +396,15 @@ export function ListaComprasScreen() {
           onSubmitEditing={handleAdicionarItem}
           maxLength={45}
         />
+        <TouchableOpacity
+          onPress={() => setModalCatalogoVisivel(true)}
+          className="bg-blue-50 px-3 rounded-2xl items-center justify-center border border-blue-100"
+          accessibilityRole="button"
+          accessibilityLabel="Abrir catálogo de itens prontos"
+        >
+          <LayoutGrid color="#2563eb" size={22} />
+          <Text className="text-blue-800 text-[10px] font-bold mt-1">Prontos</Text>
+        </TouchableOpacity>
         <TouchableOpacity 
           onPress={handleAdicionarItem}
           className="bg-green-600 px-5 rounded-2xl items-center justify-center shadow-sm"
@@ -573,6 +608,13 @@ export function ListaComprasScreen() {
           </View>
         </View>
       </Modal>
+
+      <CatalogoItensModal
+        visible={modalCatalogoVisivel}
+        nomesSelecionados={itens.map(item => item.nome)}
+        onAlternarItem={alternarItemCatalogo}
+        onClose={() => setModalCatalogoVisivel(false)}
+      />
     </KeyboardAvoidingView>
   );
 }
